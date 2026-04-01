@@ -1,10 +1,9 @@
-// src/api.js
 import axios from 'axios';
 
-// Use environment variable for backend URL
-const API_URL = `${process.env.REACT_APP_API_URL}/api`;
+// Vite env variable
+const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
-// Debug log to confirm URL
+// Debug log
 console.log("📡 API URL:", API_URL);
 
 const api = axios.create({
@@ -12,10 +11,10 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30s timeout
+  timeout: 30000,
 });
 
-// Request interceptor - automatically attach JWT token if exists
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -33,7 +32,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - handles errors globally
+// Response interceptor
 api.interceptors.response.use(
   (response) => {
     console.log(`📥 API Response: ${response.status} ${response.config.url}`);
@@ -44,8 +43,7 @@ api.interceptors.response.use(
       console.error('❌ Network Error: Cannot connect to backend API');
     } else if (error.response) {
       console.error(`❌ API Error: ${error.response.status} - ${error.response.data?.message || error.message}`);
-      
-      // Unauthorized → clear token & redirect to login
+
       if (error.response.status === 401) {
         console.log('🔒 Unauthorized - Clearing session and redirecting to login');
         localStorage.removeItem('token');
