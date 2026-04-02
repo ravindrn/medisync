@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 import ExpandableMedicineCard from './Medicines/ExpandableMedicineCard';
@@ -9,6 +10,7 @@ import DonorPrompt from './Donor/DonorPrompt';
 
 const HomePage = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [medicines, setMedicines] = useState([]);
     const [loading, setLoading] = useState(false);
     const [watchlist, setWatchlist] = useState([]);
@@ -45,6 +47,13 @@ const HomePage = () => {
             return () => clearInterval(interval);
         }
     }, [user, isAdmin, activeTab]);
+
+    // Redirect donor users to donor dashboard when they click the donor tab
+    useEffect(() => {
+        if (user && isDonor && activeTab === 'donor') {
+            navigate('/donor');
+        }
+    }, [user, isDonor, activeTab, navigate]);
 
     const fetchDistricts = async () => {
         try {
@@ -412,7 +421,7 @@ const HomePage = () => {
                             </div>
                         </div>
                         <button
-                            onClick={() => window.location.href = '/donor'}
+                            onClick={() => navigate('/donor')}
                             style={styles.donorButton}
                         >
                             Go to Donor Dashboard →
@@ -465,7 +474,7 @@ const HomePage = () => {
                 </div>
             )}
 
-            {/* Donor tabs - different view */}
+            {/* Donor tabs - Updated to use navigate directly */}
             {user && isDonor && (
                 <div style={styles.tabs}>
                     <button
@@ -478,7 +487,7 @@ const HomePage = () => {
                         🔍 Search Medicines
                     </button>
                     <button
-                        onClick={() => setActiveTab('donor')}
+                        onClick={() => navigate('/donor')}
                         style={{
                             ...styles.tab,
                             ...(activeTab === 'donor' ? styles.activeTab : {})
@@ -638,14 +647,6 @@ const HomePage = () => {
                 </div>
             )}
 
-            {/* Donor Dashboard Redirect */}
-            {user && isDonor && activeTab === 'donor' && (
-                <div style={styles.loadingContainer}>
-                    <p>Redirecting to Donor Dashboard...</p>
-                    {window.location.href = '/donor'}
-                </div>
-            )}
-
             {showModal && selectedMedicine && !isAdmin && (
                 <AddToWatchlistModal
                     isOpen={showModal}
@@ -664,7 +665,7 @@ const HomePage = () => {
                     onClose={() => setShowDonorPrompt(false)}
                     onSuccess={() => {
                         setShowDonorPrompt(false);
-                        window.location.href = '/donor';
+                        navigate('/donor');
                     }}
                 />
             )}
