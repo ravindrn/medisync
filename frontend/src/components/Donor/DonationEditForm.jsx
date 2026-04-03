@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
-import { useAuth } from '../../contexts/AuthContext';
 
 const DonationEditForm = ({ donation, onClose, onSuccess }) => {
-    const { user } = useAuth();
     const [medicines, setMedicines] = useState([]);
     const [hospitals, setHospitals] = useState([]);
     const [selectedItems, setSelectedItems] = useState([]);
@@ -18,18 +16,16 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
     useEffect(() => {
         fetchData();
         // Load existing donation data
-        if (donation && donation.items) {
-            setSelectedItems(donation.items.map(item => ({
-                medicineId: item.medicineId,
-                medicineName: item.medicineName,
-                weight: item.weight,
-                unit: item.unit,
-                quantity: item.quantity
-            })));
-            setSelectedHospital(donation.hospitalId);
-            setNotes(donation.notes || '');
-        }
-    }, [donation]);
+        setSelectedItems(donation.items.map(item => ({
+            medicineId: item.medicineId,
+            medicineName: item.medicineName,
+            weight: item.weight,
+            unit: item.unit,
+            quantity: item.quantity
+        })));
+        setSelectedHospital(donation.hospitalId);
+        setNotes(donation.notes || '');
+    }, []);
 
     const fetchData = async () => {
         try {
@@ -97,52 +93,6 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
         toast.success('Item removed');
     };
 
-    const sendEmailNotification = async (updatedDonation) => {
-        try {
-            // Get hospital name
-            const hospital = hospitals.find(h => h._id === selectedHospital);
-            
-            const emailData = {
-                to: user?.email,
-                subject: `Donation Updated - ${donation.donationId}`,
-                message: `
-                    Dear ${user?.name},
-                    
-                    Your donation (ID: ${donation.donationId}) has been successfully updated.
-                    
-                    Updated Details:
-                    Hospital: ${hospital?.name || 'Updated Hospital'}
-                    Items: ${selectedItems.length} medicine(s)
-                    Total Quantity: ${selectedItems.reduce((sum, item) => sum + item.quantity, 0)} units
-                    Notes: ${notes || 'No notes'}
-                    
-                    Previous Details:
-                    Hospital: ${donation.hospitalName}
-                    Items: ${donation.items?.length || 0} medicine(s)
-                    Total Quantity: ${donation.totalQuantity || 0} units
-                    
-                    Your changes will be reviewed by our admin team.
-                    
-                    Thank you for your generosity!
-                    
-                    Best regards,
-                    MediSync Team
-                `
-            };
-            
-            // Try to send email, but don't block if it fails
-            try {
-                await api.post('/notifications/send-email', emailData);
-                console.log('Email notification sent successfully');
-            } catch (emailError) {
-                console.error('Failed to send email:', emailError);
-                // Don't show error to user, just log it
-            }
-        } catch (error) {
-            console.error('Error preparing email:', error);
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         
@@ -156,26 +106,15 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
             return;
         }
 
-        const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
-
         setLoading(true);
         try {
-            const response = await api.put(`/donor/donation/${donation._id}`, {
+            await api.put(`/donor/donation/${donation._id}`, {
                 items: selectedItems,
                 hospitalId: selectedHospital,
-                notes,
-                totalItems: selectedItems.length,
-                totalQuantity: totalQuantity,
-                isEdited: true,
-                editedAt: new Date().toISOString()
+                notes
             });
             
-            // Send email notification
-            await sendEmailNotification(response.data);
-            
-            toast.success('Donation updated successfully! A confirmation email has been sent.', {
-                duration: 5000
-            });
+            toast.success('Donation updated successfully! Admin has been notified.');
             onSuccess();
         } catch (error) {
             console.error('Failed to update donation:', error);
@@ -340,7 +279,7 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
                 </p>
 
                 <div style={styles.infoBox}>
-                    ⚠️ Note: Your changes will be reviewed by admin. A confirmation email will be sent to {user?.email || 'your email'}.
+                    ⚠️ Note: Your changes will be reviewed by admin. You can only edit pending donations.
                 </div>
 
                 <form onSubmit={handleSubmit}>
@@ -392,7 +331,7 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
 
                     {selectedItems.length > 0 && (
                         <div style={styles.itemsList}>
-                            <strong>Donation Items ({selectedItems.length} items):</strong>
+                            <strong>Donation Items:</strong>
                             {selectedItems.map((item, idx) => (
                                 <div key={idx} style={styles.itemRow}>
                                     <div>
@@ -419,9 +358,6 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
                                     </div>
                                 </div>
                             ))}
-                            <div style={{ marginTop: '10px', fontSize: '13px', color: '#6b7280' }}>
-                                Total: {selectedItems.reduce((sum, item) => sum + item.quantity, 0)} units
-                            </div>
                         </div>
                     )}
 
