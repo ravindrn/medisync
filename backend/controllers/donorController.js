@@ -11,8 +11,8 @@ const {
     sendDonationNotificationToHospital,
     sendDonationCompletedNotification,
     sendDonationUpdateEmail,
-    sendDonationCancelledEmail
-    
+    sendDonationCancelledEmail,
+    sendDonationDeliveredEmail  // ← ADD THIS - it was missing!
 } = require('../services/emailService');
 const { generateTransferDocument } = require('../services/pdfService');
 const fs = require('fs');
