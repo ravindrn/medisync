@@ -998,11 +998,10 @@ module.exports = {
     approveDonation,
     completeDonation,
     rejectDonation,
-    getDonationForEdit,   // Add this
-    updateDonation,       // Add this
-    cancelDonation,       // Add this
-    getPendingDeliveries,           // ← ADD THIS
-    confirmDonationReceipt,         // ← ADD THIS
-    completeDonationAfterDelivery   // ← ADD THIS
-
+    getDonationForEdit,
+    updateDonation,
+    cancelDonation,
+    getPendingDeliveries,
+    confirmDonationReceipt,
+    completeDonationAfterDelivery
 };
