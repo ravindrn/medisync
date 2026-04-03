@@ -18,6 +18,7 @@ const DonationHistory = ({ onUpdate }) => {
         setLoading(true);
         try {
             const response = await api.get('/donor/history');
+            console.log('Donations fetched:', response.data);
             setDonations(response.data);
         } catch (error) {
             console.error('Failed to fetch donations:', error);
@@ -69,6 +70,7 @@ const DonationHistory = ({ onUpdate }) => {
     };
 
     const getStatusBadge = (status) => {
+        const statusLower = status?.toLowerCase() || 'pending';
         const badges = {
             pending: { bg: '#fef3c7', color: '#d97706', text: 'Pending Review', icon: '⏳' },
             approved: { bg: '#d1fae5', color: '#10b981', text: 'Approved', icon: '✅' },
@@ -76,7 +78,7 @@ const DonationHistory = ({ onUpdate }) => {
             rejected: { bg: '#fee2e2', color: '#dc2626', text: 'Rejected', icon: '❌' },
             cancelled: { bg: '#f3f4f6', color: '#6b7280', text: 'Cancelled', icon: '🚫' }
         };
-        const badge = badges[status] || badges.pending;
+        const badge = badges[statusLower] || badges.pending;
         return { ...badge, style: { backgroundColor: badge.bg, color: badge.color } };
     };
 
@@ -217,6 +219,10 @@ const DonationHistory = ({ onUpdate }) => {
             
             {donations.map(donation => {
                 const statusBadge = getStatusBadge(donation.status);
+                // Case-insensitive status check
+                const isPending = donation.status?.toLowerCase() === 'pending';
+                const isCompleted = donation.status?.toLowerCase() === 'completed';
+                
                 return (
                     <div key={donation._id} style={styles.donationCard}>
                         <div style={styles.header}>
@@ -231,7 +237,7 @@ const DonationHistory = ({ onUpdate }) => {
                                 </div>
                                 <div style={styles.date}>
                                     {new Date(donation.createdAt).toLocaleDateString()}
-                                    {donation.updatedAt !== donation.createdAt && donation.status === 'pending' && (
+                                    {donation.updatedAt !== donation.createdAt && isPending && (
                                         <span style={{ marginLeft: '8px', color: '#f59e0b' }}>
                                             (Updated: {new Date(donation.updatedAt).toLocaleDateString()})
                                         </span>
@@ -273,7 +279,8 @@ const DonationHistory = ({ onUpdate }) => {
                             </div>
                         )}
                         
-                        {donation.status === 'pending' && (
+                        {/* Edit and Cancel Buttons - Fixed with case-insensitive check */}
+                        {isPending && (
                             <div style={styles.actionButtons}>
                                 <button
                                     onClick={() => handleEdit(donation)}
@@ -290,7 +297,8 @@ const DonationHistory = ({ onUpdate }) => {
                             </div>
                         )}
                         
-                        {donation.status === 'completed' && (
+                        {/* Certificate Button for Completed Donations */}
+                        {isCompleted && (
                             <button
                                 onClick={() => handleDownloadCertificate(donation._id)}
                                 style={{ ...styles.actionButton, ...styles.certificateButton }}
@@ -299,19 +307,34 @@ const DonationHistory = ({ onUpdate }) => {
                             </button>
                         )}
                         
-                        {donation.rejectedReason && donation.status === 'rejected' && (
+                        {/* Show message for non-pending, non-completed donations */}
+                        {!isPending && !isCompleted && (
+                            <div style={{ 
+                                marginTop: '12px', 
+                                padding: '8px', 
+                                backgroundColor: '#f3f4f6', 
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                color: '#6b7280',
+                                textAlign: 'center'
+                            }}>
+                                ℹ️ This donation is {donation.status} and cannot be edited
+                            </div>
+                        )}
+                        
+                        {donation.rejectedReason && donation.status?.toLowerCase() === 'rejected' && (
                             <div style={{ marginTop: '12px', padding: '8px', backgroundColor: '#fee2e2', borderRadius: '6px', fontSize: '13px', color: '#dc2626' }}>
                                 <strong>❌ Rejection Reason:</strong> {donation.rejectedReason}
                             </div>
                         )}
                         
-                        {donation.adminNotes && donation.status === 'approved' && (
+                        {donation.adminNotes && donation.status?.toLowerCase() === 'approved' && (
                             <div style={{ marginTop: '12px', padding: '8px', backgroundColor: '#fef3c7', borderRadius: '6px', fontSize: '13px', color: '#92400e' }}>
                                 <strong>📋 Admin Note:</strong> {donation.adminNotes}
                             </div>
                         )}
                         
-                        {donation.deliveryLocation && donation.status === 'approved' && (
+                        {donation.deliveryLocation && donation.status?.toLowerCase() === 'approved' && (
                             <div style={{ marginTop: '12px', padding: '8px', backgroundColor: '#e0f2fe', borderRadius: '6px', fontSize: '13px', color: '#0369a1' }}>
                                 <strong>📍 Delivery Location:</strong> {donation.deliveryLocation}
                                 {donation.deliveryDate && (
@@ -469,7 +492,7 @@ const DonationDetailsModal = ({ donation, onClose }) => {
                 
                 <div style={styles.section}>
                     <div style={styles.label}>Status</div>
-                    <div style={styles.value}>{donation.status.toUpperCase()}</div>
+                    <div style={styles.value}>{donation.status?.toUpperCase()}</div>
                 </div>
                 
                 <div style={styles.section}>
