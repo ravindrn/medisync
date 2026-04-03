@@ -18,16 +18,18 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
     useEffect(() => {
         fetchData();
         // Load existing donation data
-        setSelectedItems(donation.items.map(item => ({
-            medicineId: item.medicineId,
-            medicineName: item.medicineName,
-            weight: item.weight,
-            unit: item.unit,
-            quantity: item.quantity
-        })));
-        setSelectedHospital(donation.hospitalId);
-        setNotes(donation.notes || '');
-    }, []);
+        if (donation && donation.items) {
+            setSelectedItems(donation.items.map(item => ({
+                medicineId: item.medicineId,
+                medicineName: item.medicineName,
+                weight: item.weight,
+                unit: item.unit,
+                quantity: item.quantity
+            })));
+            setSelectedHospital(donation.hospitalId);
+            setNotes(donation.notes || '');
+        }
+    }, [donation]);
 
     const fetchData = async () => {
         try {
@@ -95,49 +97,49 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
         toast.success('Item removed');
     };
 
-    // Function to send email notification about the edit
-    const sendEditNotificationEmail = async (updatedDonation) => {
+    const sendEmailNotification = async (updatedDonation) => {
         try {
             // Get hospital name
             const hospital = hospitals.find(h => h._id === selectedHospital);
             
             const emailData = {
-                to: user.email,
+                to: user?.email,
                 subject: `Donation Updated - ${donation.donationId}`,
-                template: 'donation-edit-confirmation',
-                data: {
-                    donorName: user.name,
-                    donationId: donation.donationId,
-                    oldItems: donation.items,
-                    newItems: selectedItems,
-                    oldNotes: donation.notes,
-                    newNotes: notes,
-                    oldHospital: donation.hospitalName,
-                    newHospital: hospital?.name || 'Updated Hospital',
-                    editDate: new Date().toLocaleString(),
-                    status: 'pending_review'
-                }
+                message: `
+                    Dear ${user?.name},
+                    
+                    Your donation (ID: ${donation.donationId}) has been successfully updated.
+                    
+                    Updated Details:
+                    Hospital: ${hospital?.name || 'Updated Hospital'}
+                    Items: ${selectedItems.length} medicine(s)
+                    Total Quantity: ${selectedItems.reduce((sum, item) => sum + item.quantity, 0)} units
+                    Notes: ${notes || 'No notes'}
+                    
+                    Previous Details:
+                    Hospital: ${donation.hospitalName}
+                    Items: ${donation.items?.length || 0} medicine(s)
+                    Total Quantity: ${donation.totalQuantity || 0} units
+                    
+                    Your changes will be reviewed by our admin team.
+                    
+                    Thank you for your generosity!
+                    
+                    Best regards,
+                    MediSync Team
+                `
             };
             
-            await api.post('/notifications/send-email', emailData);
-            console.log('Edit notification email sent successfully');
-        } catch (emailError) {
-            console.error('Failed to send email notification:', emailError);
-            // Don't block the main flow if email fails
-        }
-    };
-
-    // Function to send SMS notification (optional)
-    const sendEditNotificationSMS = async () => {
-        if (user.phone) {
+            // Try to send email, but don't block if it fails
             try {
-                await api.post('/notifications/send-sms', {
-                    to: user.phone,
-                    message: `Your donation ${donation.donationId} has been updated. Admin will review your changes.`
-                });
-            } catch (smsError) {
-                console.error('Failed to send SMS:', smsError);
+                await api.post('/notifications/send-email', emailData);
+                console.log('Email notification sent successfully');
+            } catch (emailError) {
+                console.error('Failed to send email:', emailError);
+                // Don't show error to user, just log it
             }
+        } catch (error) {
+            console.error('Error preparing email:', error);
         }
     };
 
@@ -154,44 +156,30 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
             return;
         }
 
-        // Calculate total items and quantity
-        const totalItems = selectedItems.length;
         const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
 
         setLoading(true);
         try {
-            // Update donation
             const response = await api.put(`/donor/donation/${donation._id}`, {
                 items: selectedItems,
                 hospitalId: selectedHospital,
                 notes,
-                totalItems,
-                totalQuantity,
+                totalItems: selectedItems.length,
+                totalQuantity: totalQuantity,
                 isEdited: true,
                 editedAt: new Date().toISOString()
             });
             
-            // Send email notification about the edit
-            await sendEditNotificationEmail(response.data);
+            // Send email notification
+            await sendEmailNotification(response.data);
             
-            // Send SMS notification (optional)
-            await sendEditNotificationSMS();
-            
-            toast.success(
-                'Donation updated successfully! A confirmation email has been sent to your registered email address.',
-                { duration: 5000 }
-            );
-            
+            toast.success('Donation updated successfully! A confirmation email has been sent.', {
+                duration: 5000
+            });
             onSuccess();
         } catch (error) {
             console.error('Failed to update donation:', error);
-            const errorMessage = error.response?.data?.message || 'Failed to update donation';
-            toast.error(errorMessage);
-            
-            // If email failed but donation updated, show warning
-            if (error.response?.data?.donationUpdated) {
-                toast.warning('Donation updated but email notification failed. Please check your email settings.');
-            }
+            toast.error(error.response?.data?.message || 'Failed to update donation');
         } finally {
             setLoading(false);
         }
@@ -330,14 +318,6 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
             marginBottom: '20px',
             fontSize: '14px',
             color: '#92400e'
-        },
-        changesPreview: {
-            backgroundColor: '#e0f2fe',
-            padding: '12px',
-            borderRadius: '8px',
-            marginBottom: '20px',
-            fontSize: '13px',
-            color: '#0369a1'
         }
     };
 
@@ -351,14 +331,6 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
         );
     }
 
-    // Check if there are actual changes
-    const hasChanges = () => {
-        const itemsChanged = JSON.stringify(selectedItems) !== JSON.stringify(donation.items);
-        const hospitalChanged = selectedHospital !== donation.hospitalId;
-        const notesChanged = notes !== (donation.notes || '');
-        return itemsChanged || hospitalChanged || notesChanged;
-    };
-
     return (
         <div style={styles.overlay} onClick={onClose}>
             <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -368,14 +340,8 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
                 </p>
 
                 <div style={styles.infoBox}>
-                    ⚠️ Note: Your changes will be reviewed by admin. You will receive an email confirmation after submission.
+                    ⚠️ Note: Your changes will be reviewed by admin. A confirmation email will be sent to {user?.email || 'your email'}.
                 </div>
-
-                {hasChanges() && (
-                    <div style={styles.changesPreview}>
-                        📧 An email confirmation will be sent to {user?.email} after updating this donation.
-                    </div>
-                )}
 
                 <form onSubmit={handleSubmit}>
                     <div style={styles.formGroup}>
@@ -426,7 +392,7 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
 
                     {selectedItems.length > 0 && (
                         <div style={styles.itemsList}>
-                            <strong>Donation Items:</strong>
+                            <strong>Donation Items ({selectedItems.length} items):</strong>
                             {selectedItems.map((item, idx) => (
                                 <div key={idx} style={styles.itemRow}>
                                     <div>
@@ -453,6 +419,9 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
                                     </div>
                                 </div>
                             ))}
+                            <div style={{ marginTop: '10px', fontSize: '13px', color: '#6b7280' }}>
+                                Total: {selectedItems.reduce((sum, item) => sum + item.quantity, 0)} units
+                            </div>
                         </div>
                     )}
 
@@ -472,7 +441,7 @@ const DonationEditForm = ({ donation, onClose, onSuccess }) => {
                         disabled={loading || selectedItems.length === 0}
                         style={styles.submitButton}
                     >
-                        {loading ? 'Updating and Sending Confirmation...' : 'Update Donation'}
+                        {loading ? 'Updating...' : 'Update Donation'}
                     </button>
                     
                     <button
