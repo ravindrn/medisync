@@ -1,59 +1,23 @@
-const sgMail = require('@sendgrid/mail');
-const User = require('../models/User');
+// emailService.js - Switch to Resend
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Initialize SendGrid
-if (process.env.SENDGRID_API_KEY) {
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    console.log('✅ SendGrid initialized');
-}
-
-// Helper to send email via SendGrid
-const sendViaSendGrid = async (to, subject, html, attachments = []) => {
-    if (!process.env.SENDGRID_API_KEY) {
-        console.log('⚠️ No SendGrid API key found');
-        return null;
-    }
-    
+const sendEmail = async (to, subject, html) => {
     try {
-        const msg = {
-            to: to,
-            from: 'info.project.medisync@gmail.com',  // ✅ YOUR VERIFIED EMAIL
+        const { data, error } = await resend.emails.send({
+            from: 'MediSync <onboarding@resend.dev>', // Resend's verified domain
+            to: [to],
             subject: subject,
-            html: html,
-        };
+            html: html
+        });
         
-        // Add attachments if any
-        if (attachments && attachments.length > 0) {
-            msg.attachments = attachments.map(a => ({
-                content: a.content || '',
-                filename: a.filename,
-                type: 'application/pdf',
-                disposition: 'attachment'
-            }));
-        }
-        
-        await sgMail.send(msg);
-        console.log(`✅ Email sent via SendGrid to ${to}`);
-        return { success: true, provider: 'sendgrid' };
+        if (error) throw error;
+        console.log(`✅ Email sent to ${to}`);
+        return { success: true };
     } catch (error) {
-        if (error.response) {
-            console.error('SendGrid Error:', JSON.stringify(error.response.body, null, 2));
-        } else {
-            console.error('SendGrid failed:', error.message);
-        }
-        return null;
+        console.error('Email failed:', error.message);
+        return { success: false };
     }
-};
-
-// Main email sender
-const sendEmail = async (to, subject, html, attachments = []) => {
-    const sendgridResult = await sendViaSendGrid(to, subject, html, attachments);
-    if (sendgridResult && sendgridResult.success) {
-        return sendgridResult;
-    }
-    
-    console.log(`⚠️ Could not send email to ${to}`);
-    return { success: false, provider: 'none', error: 'SendGrid failed' };
 };
 
 
