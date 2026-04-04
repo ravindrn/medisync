@@ -1,23 +1,15 @@
-// Force Node.js to use IPv4 instead of IPv6
-const dns = require('dns');
-dns.setDefaultResultOrder('ipv4first');
-
 const nodemailer = require('nodemailer');
+const User = require('../models/User');
+
 // Configure email transporter
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
+    service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
-    // Force connection to IPv4 address
-    family: 4,
-    // Add timeout to prevent hanging
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 20000
+    debug: true,
+    logger: true
 });
 
 // Verify email configuration
