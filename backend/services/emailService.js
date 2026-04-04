@@ -1,35 +1,59 @@
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
 
-// Create Gmail transporter with your credentials
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,  // info.project.medisync@gmail.com
-        pass: process.env.EMAIL_PASS   // fqdofwvpxanlamxr
-    }
-});
+let transporter = null;
+let previewUrl = null;
 
-// Verify connection on startup
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('❌ Gmail connection failed:', error);
-    } else {
-        console.log('✅ Gmail is ready to send emails');
+// Create ethereal transporter (works on Render!)
+const initTransporter = async () => {
+    try {
+        const testAccount = await nodemailer.createTestAccount();
+        transporter = nodemailer.createTransport({
+            host: 'smtp.ethereal.email',
+            port: 587,
+            secure: false,
+            auth: {
+                user: testAccount.user,
+                pass: testAccount.pass
+            }
+        });
+        console.log('✅ Ethereal email ready');
+        console.log(`📧 Preview URL will be shown for each email`);
+        return true;
+    } catch (error) {
+        console.error('Ethereal init failed:', error);
+        return false;
     }
-});
+};
+
+// Initialize on startup
+initTransporter();
 
 // Main email sender
 const sendEmail = async (to, subject, html) => {
+    if (!transporter) {
+        console.log('⚠️ Transporter not ready, initializing...');
+        await initTransporter();
+        if (!transporter) return { success: false, error: 'Transporter not available' };
+    }
+    
     try {
         const info = await transporter.sendMail({
-            from: `"MediSync" <${process.env.EMAIL_USER}>`,
+            from: '"MediSync" <medisync@ethereal.email>',
             to: to,
             subject: subject,
             html: html
         });
-        console.log(`✅ Email sent to ${to}`);
-        return { success: true, messageId: info.messageId };
+        
+        const preview = nodemailer.getTestMessageUrl(info);
+        console.log(`✅ Email would be sent to: ${to}`);
+        console.log(`📧 Preview URL (for viva demonstration): ${preview}`);
+        
+        return { 
+            success: true, 
+            previewUrl: preview,
+            message: `Email would be sent to ${to}. View at: ${preview}`
+        };
     } catch (error) {
         console.error('Email failed:', error.message);
         return { success: false, error: error.message };
@@ -81,24 +105,36 @@ const sendStockArrivalSubmittedToAdmins = async (requestData) => {
         if (!admins || admins.length === 0) return { success: false, error: 'No admins found' };
 
         const medicineRows = requestData.medicines.map((med, index) => `
-            <tr><td>${index + 1}</td><td>${med.medicineName}</td><td>${med.weight}${med.unit}</td><td>${med.quantity} units</td><td>${med.batchNumber || 'N/A'}</td><td>${med.expiryDate ? new Date(med.expiryDate).toLocaleDateString() : 'N/A'}</td></tr>
+            <tr>
+                <td style="padding: 8px; border: 1px solid #ddd;">${index + 1}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${med.medicineName}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${med.weight}${med.unit}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${med.quantity} units</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${med.batchNumber || 'N/A'}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${med.expiryDate ? new Date(med.expiryDate).toLocaleDateString() : 'N/A'}</td>
+            </tr>
         `).join('');
 
         const results = [];
         for (const admin of admins) {
             const html = `
-                <h2>New Stock Arrival Request</h2>
+                <h2>📦 New Stock Arrival Request</h2>
                 <p><strong>Hospital:</strong> ${requestData.hospitalName}</p>
                 <p><strong>District:</strong> ${requestData.hospitalDistrict}</p>
                 <p><strong>Arrival Date:</strong> ${requestData.arrivalDate ? new Date(requestData.arrivalDate).toLocaleString() : new Date().toLocaleString()}</p>
                 <h3>Medicines:</h3>
-                <table border="1" cellpadding="5"><tr><th>#</th><th>Medicine</th><th>Strength</th><th>Quantity</th><th>Batch No</th><th>Expiry Date</th></tr>${medicineRows}</table>
+                <table border="1" cellpadding="8" style="border-collapse: collapse;">
+                    <thead><tr><th>#</th><th>Medicine</th><th>Strength</th><th>Quantity</th><th>Batch No</th><th>Expiry Date</th></tr></thead>
+                    <tbody>${medicineRows}</tbody>
+                </table>
                 ${requestData.notes ? `<p><strong>Notes:</strong> ${requestData.notes}</p>` : ''}
+                <hr>
+                <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
             `;
             const result = await sendEmail(admin.email, `📦 New Stock Arrival Request - ${requestData.hospitalName}`, html);
-            results.push({ email: admin.email, success: result.success });
+            results.push({ email: admin.email, success: result.success, previewUrl: result.previewUrl });
         }
-        return { success: true, sentCount: results.filter(r => r.success).length };
+        return { success: true, sentCount: results.filter(r => r.success).length, results };
     } catch (error) {
         return { success: false, error: error.message };
     }
@@ -106,15 +142,19 @@ const sendStockArrivalSubmittedToAdmins = async (requestData) => {
 
 const sendStockArrivalApprovedToManager = async (managerEmail, managerName, stockRequest, approvedMedicine, adminUser, updatedQuantity) => {
     const html = `
-        <h2>✅ Stock Arrival Approved</h2>
-        <p>Hello ${managerName},</p>
-        <p>Your stock arrival request has been <strong style="color:green;">APPROVED</strong>.</p>
-        <div style="background:#f0fdf4; padding:15px; border-radius:8px;">
-            <p><strong>Medicine:</strong> ${approvedMedicine.medicineName}</p>
-            <p><strong>Strength:</strong> ${approvedMedicine.weight}${approvedMedicine.unit}</p>
-            <p><strong>Approved Quantity:</strong> +${approvedMedicine.quantity} units</p>
-            <p><strong>Updated Stock:</strong> ${updatedQuantity} units</p>
-            <p><strong>Approved By:</strong> ${adminUser.name}</p>
+        <div style="font-family: Arial, sans-serif;">
+            <h2 style="color: #10b981;">✅ Stock Arrival Approved</h2>
+            <p>Hello ${managerName},</p>
+            <p>Your stock arrival request has been <strong style="color:green;">APPROVED</strong>.</p>
+            <div style="background:#f0fdf4; padding:15px; border-radius:8px;">
+                <p><strong>Medicine:</strong> ${approvedMedicine.medicineName}</p>
+                <p><strong>Strength:</strong> ${approvedMedicine.weight}${approvedMedicine.unit}</p>
+                <p><strong>Approved Quantity:</strong> +${approvedMedicine.quantity} units</p>
+                <p><strong>Updated Stock:</strong> ${updatedQuantity} units</p>
+                <p><strong>Approved By:</strong> ${adminUser.name}</p>
+            </div>
+            <hr>
+            <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
         </div>
     `;
     return await sendEmail(managerEmail, `✅ Stock Arrival Approved - ${approvedMedicine.medicineName}`, html);
@@ -122,13 +162,18 @@ const sendStockArrivalApprovedToManager = async (managerEmail, managerName, stoc
 
 const sendStockArrivalRejectedToManager = async (managerEmail, managerName, stockRequest, rejectedMedicine, adminUser, rejectionReason) => {
     const html = `
-        <h2>❌ Stock Arrival Rejected</h2>
-        <p>Hello ${managerName},</p>
-        <p>Your stock arrival request has been <strong style="color:red;">REJECTED</strong>.</p>
-        <div style="background:#fef2f2; padding:15px; border-radius:8px;">
-            <p><strong>Medicine:</strong> ${rejectedMedicine.medicineName}</p>
-            <p><strong>Quantity:</strong> ${rejectedMedicine.quantity} units</p>
-            <p><strong>Reason:</strong> ${rejectionReason || 'No reason provided'}</p>
+        <div style="font-family: Arial, sans-serif;">
+            <h2 style="color: #ef4444;">❌ Stock Arrival Rejected</h2>
+            <p>Hello ${managerName},</p>
+            <p>Your stock arrival request has been <strong style="color:red;">REJECTED</strong>.</p>
+            <div style="background:#fef2f2; padding:15px; border-radius:8px;">
+                <p><strong>Medicine:</strong> ${rejectedMedicine.medicineName}</p>
+                <p><strong>Strength:</strong> ${rejectedMedicine.weight}${rejectedMedicine.unit}</p>
+                <p><strong>Quantity:</strong> ${rejectedMedicine.quantity} units</p>
+                <p><strong>Reason:</strong> ${rejectionReason || 'No reason provided'}</p>
+            </div>
+            <hr>
+            <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
         </div>
     `;
     return await sendEmail(managerEmail, `❌ Stock Arrival Rejected - ${rejectedMedicine.medicineName}`, html);
@@ -137,24 +182,55 @@ const sendStockArrivalRejectedToManager = async (managerEmail, managerName, stoc
 // Transfer emails
 const sendTransferRequestEmail = async (toHospitalManager, fromHospital, toHospital, medicines, requestId) => {
     const medicineList = medicines.map(m => `- ${m.medicineName} (${m.weight}${m.unit}): ${m.requestedQuantity} units`).join('<br>');
-    const html = `<h2>New Transfer Request</h2><p>Request ID: ${requestId}</p><p>From: ${fromHospital.name}</p><p>To: ${toHospital.name}</p><p>Medicines:<br>${medicineList}</p>`;
+    const html = `
+        <h2>📋 New Transfer Request</h2>
+        <p><strong>Request ID:</strong> ${requestId}</p>
+        <p><strong>From:</strong> ${fromHospital.name} (${fromHospital.district})</p>
+        <p><strong>To:</strong> ${toHospital.name} (${toHospital.district})</p>
+        <p><strong>Medicines Requested:</strong><br>${medicineList}</p>
+        <hr>
+        <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
+    `;
     return await sendEmail(toHospitalManager.email, `📋 New Transfer Request from ${fromHospital.name}`, html);
 };
 
 const sendTransferApprovedEmail = async (requestingHospitalManager, fromHospital, toHospital, medicines, requestId) => {
     const medicineList = medicines.map(m => `- ${m.medicineName} (${m.weight}${m.unit}): ${m.approvedQuantity} units`).join('<br>');
-    const html = `<h2>✅ Transfer Approved</h2><p>Request ID: ${requestId}</p><p>From: ${toHospital.name}</p><p>To: ${fromHospital.name}</p><p>Approved:<br>${medicineList}</p>`;
+    const html = `
+        <h2>✅ Transfer Approved</h2>
+        <p><strong>Request ID:</strong> ${requestId}</p>
+        <p><strong>From:</strong> ${toHospital.name}</p>
+        <p><strong>To:</strong> ${fromHospital.name}</p>
+        <p><strong>Approved Medicines:</strong><br>${medicineList}</p>
+        <hr>
+        <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
+    `;
     return await sendEmail(requestingHospitalManager.email, `✅ Transfer Approved - ${requestId}`, html);
 };
 
 const sendTransferCompletedEmail = async (sendingHospitalManager, fromHospital, toHospital, medicines, requestId) => {
     const medicineList = medicines.map(m => `- ${m.medicineName} (${m.weight}${m.unit}): ${m.approvedQuantity} units`).join('<br>');
-    const html = `<h2>✅ Transfer Completed</h2><p>Request ID: ${requestId}</p><p>From: ${toHospital.name}</p><p>To: ${fromHospital.name}</p><p>Transferred:<br>${medicineList}</p>`;
+    const html = `
+        <h2>✅ Transfer Completed</h2>
+        <p><strong>Request ID:</strong> ${requestId}</p>
+        <p><strong>From:</strong> ${toHospital.name}</p>
+        <p><strong>To:</strong> ${fromHospital.name}</p>
+        <p><strong>Medicines Transferred:</strong><br>${medicineList}</p>
+        <hr>
+        <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
+    `;
     return await sendEmail(sendingHospitalManager.email, `✅ Transfer Completed - ${requestId}`, html);
 };
 
 const sendTransferRejectedEmail = async (requestingHospitalManager, fromHospital, toHospital, reason, requestId) => {
-    const html = `<h2>❌ Transfer Rejected</h2><p>Request ID: ${requestId}</p><p>To: ${toHospital.name}</p><p>Reason: ${reason || 'No reason provided'}</p>`;
+    const html = `
+        <h2>❌ Transfer Rejected</h2>
+        <p><strong>Request ID:</strong> ${requestId}</p>
+        <p><strong>To:</strong> ${toHospital.name}</p>
+        <p><strong>Reason:</strong> ${reason || 'No reason provided'}</p>
+        <hr>
+        <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
+    `;
     return await sendEmail(requestingHospitalManager.email, `❌ Transfer Rejected - ${requestId}`, html);
 };
 
@@ -189,6 +265,8 @@ const sendDonationApprovalEmail = async (email, name, donation, hospital) => {
                 <p><strong>Items:</strong> ${donation.totalItems} medicines (${donation.totalQuantity} units)</p>
             </div>
             <p>Please coordinate with the hospital for delivery arrangements.</p>
+            <hr>
+            <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
         </div>
     `;
     return await sendEmail(email, `✅ Your Donation Has Been Approved! - MediSync`, html);
@@ -204,6 +282,8 @@ const sendDonationRejectedEmail = async (email, name, donation, reason) => {
                 <p><strong>Reason:</strong> ${reason || 'No specific reason provided'}</p>
             </div>
             <p>You may submit a new donation request.</p>
+            <hr>
+            <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
         </div>
     `;
     return await sendEmail(email, `📋 Update on Your Donation - MediSync`, html);
@@ -221,6 +301,8 @@ const sendDonationCertificateEmail = async (email, name, donation, certificate) 
                 <p>To: ${donation.hospitalName}</p>
             </div>
             <p>You can download your certificate from your donor portal.</p>
+            <hr>
+            <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
         </div>
     `;
     return await sendEmail(email, `🎉 Your Donation Certificate - MediSync`, html);
@@ -237,6 +319,8 @@ const sendDonationNotificationToHospital = async (email, name, donation, donor) 
                 <p><strong>Items:</strong> ${donation.totalItems} medicines (${donation.totalQuantity} units)</p>
             </div>
             <p>Please coordinate with the donor for delivery.</p>
+            <hr>
+            <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
         </div>
     `;
     return await sendEmail(email, `📦 New Donation Assigned to Your Hospital - MediSync`, html);
@@ -252,6 +336,8 @@ const sendDonationCompletedNotification = async (email, name, donation, donor) =
                 <p><strong>Donor:</strong> ${donor.name}</p>
                 <p><strong>Items Received:</strong> ${donation.totalItems} medicines (${donation.totalQuantity} units)</p>
             </div>
+            <hr>
+            <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
         </div>
     `;
     return await sendEmail(email, `✅ Donation Completed - ${donation.donationId}`, html);
@@ -263,11 +349,13 @@ const sendDonationUpdateEmail = async (adminEmail, adminName, donation, donorId,
         const html = `
             <h2>✏️ Donation Updated</h2>
             <p>A donor has updated their donation request.</p>
-            <div style="background:#fffbeb; padding:15px;">
+            <div style="background:#fffbeb; padding:15px; border-radius:8px;">
                 <p><strong>Donor:</strong> ${donor?.name || 'Unknown'}</p>
                 <p><strong>Donation ID:</strong> ${donation.donationId}</p>
                 <p><strong>Items:</strong> ${donation.totalItems} medicines (${donation.totalQuantity} units)</p>
             </div>
+            <hr>
+            <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
         `;
         return await sendEmail(adminEmail, `✏️ Donation Updated - ${donation.donationId}`, html);
     } catch (error) {
@@ -281,11 +369,13 @@ const sendDonationCancelledEmail = async (adminEmail, adminName, donation) => {
         const html = `
             <h2>❌ Donation Cancelled</h2>
             <p>A donor has cancelled their donation request.</p>
-            <div style="background:#fef2f2; padding:15px;">
+            <div style="background:#fef2f2; padding:15px; border-radius:8px;">
                 <p><strong>Donor:</strong> ${donor?.name || 'Unknown'}</p>
                 <p><strong>Donation ID:</strong> ${donation.donationId}</p>
                 <p><strong>Items:</strong> ${donation.totalItems} medicines (${donation.totalQuantity} units)</p>
             </div>
+            <hr>
+            <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
         `;
         return await sendEmail(adminEmail, `❌ Donation Cancelled - ${donation.donationId}`, html);
     } catch (error) {
@@ -299,11 +389,13 @@ const sendDonationDeliveredEmail = async (adminEmail, adminName, donation, hospi
         const html = `
             <h2>📦 Donation Delivered!</h2>
             <p>The hospital manager has confirmed receipt.</p>
-            <div style="background:#f0fdf4; padding:15px;">
+            <div style="background:#f0fdf4; padding:15px; border-radius:8px;">
                 <p><strong>Donor:</strong> ${donor.name}</p>
                 <p><strong>Hospital:</strong> ${hospital.name}</p>
                 <p><strong>Items:</strong> ${donation.totalItems} medicines (${donation.totalQuantity} units)</p>
             </div>
+            <hr>
+            <p style="font-size: 12px; color: #666;">MediSync - University Project</p>
         `;
         return await sendEmail(adminEmail, `📦 Donation Delivered - ${donation.donationId}`, html);
     } catch (error) {
