@@ -1,5 +1,3 @@
-is this correct?
-
 const sgMail = require('@sendgrid/mail');
 const User = require('../models/User');
 
