@@ -1,12 +1,21 @@
-const nodemailer = require('nodemailer');
-const User = require('../models/User');
+const nodemailer = require("nodemailer");
+const dns = require("dns");
+const User = require("../models/User");
+
+// ⭐ FORCE IPV4 (Fix Render ENETUNREACH error)
+dns.setDefaultResultOrder("ipv4first");
 
 // Configure email transporter
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: "smtp.gmail.com",
+    port: 587,          // ✅ use 587 (NOT 465)
+    secure: false,      // TLS upgrade
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
     },
     debug: true,
     logger: true
@@ -15,11 +24,13 @@ const transporter = nodemailer.createTransport({
 // Verify email configuration
 transporter.verify((error, success) => {
     if (error) {
-        console.error('❌ Email configuration error:', error);
+        console.error("❌ Email configuration error:", error);
     } else {
-        console.log('✅ Email service is ready to send notifications');
+        console.log("✅ Email service is ready to send notifications");
     }
 });
+
+module.exports = transporter;
 
 // Send stock update notification email
 const sendStockUpdateNotification = async (userEmail, userName, medicineName, strength, hospitalName, district, newQuantity) => {
