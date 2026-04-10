@@ -23,8 +23,8 @@ const HomePage = () => {
     const [showModal, setShowModal] = useState(false);
     const [selectedMedicine, setSelectedMedicine] = useState(null);
     const [showDonorPrompt, setShowDonorPrompt] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
 
-    // Check if user is admin
     const isAdmin = user?.role === 'admin';
     const isDonor = user?.role === 'donor';
 
@@ -32,24 +32,18 @@ const HomePage = () => {
         fetchDistricts();
         if (user && !isAdmin) {
             fetchWatchlist();
-            // Set default district to user's district when logged in
             if (!selectedDistrict) {
                 setSelectedDistrict(user.district);
             }
-            
-            // Set up auto-refresh for watchlist every 30 seconds
             const interval = setInterval(() => {
                 if (activeTab === 'watchlist') {
-                    console.log('Auto-refreshing watchlist...');
                     fetchWatchlist();
                 }
             }, 30000);
-            
             return () => clearInterval(interval);
         }
     }, [user, isAdmin, activeTab]);
 
-    // Redirect donor users to donor dashboard when they click the donor tab
     useEffect(() => {
         if (user && isDonor && activeTab === 'donor') {
             navigate('/donor');
@@ -128,7 +122,6 @@ const HomePage = () => {
 
     const refreshWatchlist = async () => {
         try {
-            console.log('Manually refreshing watchlist...');
             await fetchWatchlist();
             toast.success('Watchlist updated with latest stock information!');
         } catch (error) {
@@ -174,265 +167,326 @@ const HomePage = () => {
         }
     };
 
-    return (
-        <div className="container" style={{ padding: '20px' }}>
-            {/* Header Section */}
-            <div className="medisync-card" style={{ textAlign: 'center', marginBottom: '30px' }}>
-                <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#1a1a2e', marginBottom: '10px' }}>
-                    🏥 Medicine Stock Finder
-                </h1>
-                <p style={{ fontSize: '16px', color: '#666' }}>
-                    Search for medicines by name tags and find availability in your district
-                </p>
+    // Hero Section Component
+    const HeroSection = () => (
+        <div className="hero-section">
+            <div className="hero-badge">
+                <span className="hero-badge-icon">🏥</span>
+                <span>MediSync Platform</span>
+            </div>
+            <h1 className="hero-title">
+                Find Medicines
+                <span className="hero-title-gradient"> Instantly</span>
+            </h1>
+            <p className="hero-subtitle">
+                Connect with medicine stocks across Sri Lanka. Real-time availability, 
+                smart search, and seamless coordination for healthcare providers.
+            </p>
+            {!user && (
+                <div className="hero-buttons">
+                    <button onClick={() => navigate('/login')} className="hero-btn-primary">
+                        Get Started
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M4.16666 10H15.8333M15.8333 10L10 4.16667M15.8333 10L10 15.8333" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                    </button>
+                    <button onClick={() => setShowDonorPrompt(true)} className="hero-btn-secondary">
+                        Become a Donor
+                        <span>❤️</span>
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+
+    // Stats Section
+    const StatsSection = () => (
+        <div className="stats-grid">
+            <div className="stat-card-modern">
+                <div className="stat-icon-modern">💊</div>
+                <div className="stat-content">
+                    <h3>500+</h3>
+                    <p>Medicines Available</p>
+                </div>
+            </div>
+            <div className="stat-card-modern">
+                <div className="stat-icon-modern">🏥</div>
+                <div className="stat-content">
+                    <h3>25+</h3>
+                    <p>Partner Hospitals</p>
+                </div>
+            </div>
+            <div className="stat-card-modern">
+                <div className="stat-icon-modern">🤝</div>
+                <div className="stat-content">
+                    <h3>1000+</h3>
+                    <p>Donations Processed</p>
+                </div>
+            </div>
+            <div className="stat-card-modern">
+                <div className="stat-icon-modern">📍</div>
+                <div className="stat-content">
+                    <h3>9</h3>
+                    <p>Districts Covered</p>
+                </div>
+            </div>
+        </div>
+    );
+
+    // Search Section
+    const SearchSection = () => (
+        <div className="search-section">
+            <div className="search-header">
+                <h2>Search Medicines</h2>
+                <p>Find available medicines in your district</p>
             </div>
 
-            {/* Donor Callout Section */}
-            {!user && (
-                <div className="glass-effect" style={{ 
-                    background: 'linear-gradient(135deg, #2A9CC1 0%, #47B2C2 100%)',
-                    borderRadius: '20px',
-                    padding: '24px',
-                    marginBottom: '30px',
-                    color: 'white'
-                }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '48px', marginBottom: '8px' }}>🤝</div>
-                            <div style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '4px' }}>Join Our Donor Community!</div>
-                            <div style={{ fontSize: '14px', opacity: 0.9 }}>
-                                Your unused medicines can save lives. Donate to hospitals in need and make a difference.
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => setShowDonorPrompt(true)}
-                            className="btn-primary"
-                            style={{ backgroundColor: 'white', color: '#2A9CC1', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
-                        >
-                            Become a Donor ❤️
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Donor Welcome Message */}
-            {user && isDonor && (
-                <div className="glass-effect" style={{ 
-                    background: 'linear-gradient(135deg, #2A9CC1 0%, #47B2C2 100%)',
-                    borderRadius: '20px',
-                    padding: '24px',
-                    marginBottom: '30px',
-                    color: 'white'
-                }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎁</div>
-                            <div style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '4px' }}>Welcome back, Donor {user?.name}!</div>
-                            <div style={{ fontSize: '14px', opacity: 0.9 }}>
-                                Thank you for your generosity! Your donations are making a difference.
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => navigate('/donor')}
-                            className="btn-primary"
-                            style={{ backgroundColor: 'white', color: '#2A9CC1' }}
-                        >
-                            Go to Donor Dashboard →
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Public Notice */}
-            {!user && (
-                <div className="alert-info" style={{ marginBottom: '20px' }}>
-                    🔍 <strong>Public Search:</strong> You can search for medicines without logging in!
-                    <br />
-                    📝 <strong>Tip:</strong> Login to add medicines to your watchlist and track availability!
-                </div>
-            )}
-
-            {/* Admin Notice */}
-            {user && isAdmin && (
-                <div className="alert-info" style={{ marginBottom: '20px', background: 'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)', borderLeftColor: '#3b82f6' }}>
-                    👑 <strong>Admin Mode:</strong> You are logged in as an administrator.
-                    <br />
-                    📦 Use the <strong>Admin Dashboard</strong> and <strong>Manage Medicines</strong> links above to manage the system.
-                </div>
-            )}
-
-            {/* Tabs for non-admin users */}
-            {user && !isAdmin && !isDonor && (
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                    <button
-                        onClick={() => setActiveTab('search')}
-                        className={activeTab === 'search' ? 'btn-primary' : 'btn-secondary'}
-                    >
-                        🔍 Search Medicines
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('watchlist')}
-                        className={activeTab === 'watchlist' ? 'btn-primary' : 'btn-secondary'}
-                    >
-                        📋 My Watchlist ({watchlist.length})
-                    </button>
-                </div>
-            )}
-
-            {/* Donor tabs */}
-            {user && isDonor && (
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                    <button
-                        onClick={() => setActiveTab('search')}
-                        className={activeTab === 'search' ? 'btn-primary' : 'btn-secondary'}
-                    >
-                        🔍 Search Medicines
-                    </button>
-                    <button
-                        onClick={() => navigate('/donor')}
-                        className={activeTab === 'donor' ? 'btn-primary' : 'btn-secondary'}
-                    >
-                        🎁 Donor Dashboard
-                    </button>
-                </div>
-            )}
-
-            {/* Search Tab Content */}
-            {activeTab === 'search' && (
-                <>
-                    {/* District Info Banner */}
-                    {user && !isAdmin && selectedDistrict && (
-                        <div className="alert-info" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <span>
-                                📍 Showing results for district: <strong>{selectedDistrict}</strong>
+            <div className="search-tags-container">
+                <div className="tags-input-wrapper">
+                    <div className="tags-list">
+                        {searchTags.map((tag, index) => (
+                            <span key={index} className="tag-item">
+                                {tag}
+                                <button onClick={() => removeTag(tag)} className="tag-remove">×</button>
                             </span>
-                            {user.district !== selectedDistrict && (
-                                <span style={{ color: '#f59e0b', fontSize: '12px' }}>
-                                    ⚠️ This is different from your registered district ({user.district})
-                                </span>
-                            )}
+                        ))}
+                        <input
+                            type="text"
+                            value={inputTag}
+                            onChange={(e) => setInputTag(e.target.value)}
+                            onKeyDown={handleAddTag}
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setIsFocused(false)}
+                            placeholder={searchTags.length === 0 ? "Type medicine name and press Enter..." : ""}
+                            className="tags-input"
+                        />
+                    </div>
+                    {isFocused && (
+                        <div className="tags-suggestions">
+                            <p>💡 Try: paracetamol, amoxicillin, vitamin, insulin</p>
                         </div>
                     )}
+                </div>
+            </div>
 
-                    {/* Search Input Area */}
-                    <div className="medisync-card" style={{ marginBottom: '20px' }}>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '10px' }}>
-                            {searchTags.map((tag, index) => (
-                                <span key={index} className="badge badge-primary" style={{ padding: '5px 12px' }}>
-                                    {tag}
-                                    <button onClick={() => removeTag(tag)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', marginLeft: '8px', fontWeight: 'bold' }}>
-                                        ×
-                                    </button>
-                                </span>
-                            ))}
-                            <input
-                                type="text"
-                                value={inputTag}
-                                onChange={(e) => setInputTag(e.target.value)}
-                                onKeyDown={handleAddTag}
-                                placeholder="Type medicine name prefix and press Enter (e.g., 'amo', 'para')..."
-                                className="modern-input"
-                                style={{ flex: 1, minWidth: '200px' }}
-                            />
-                        </div>
-                        <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
-                            💡 Tip: Type first few letters of medicine name and press Enter to add search tags
-                        </p>
-                    </div>
-
-                    {/* District Select */}
+            <div className="search-controls">
+                <div className="district-selector">
+                    <label>Select District</label>
                     <select
                         value={selectedDistrict}
                         onChange={(e) => setSelectedDistrict(e.target.value)}
-                        className="modern-select"
-                        style={{ marginBottom: '20px' }}
+                        className="district-select"
                     >
-                        <option value="">Select District</option>
+                        <option value="">Choose your district</option>
                         {districts.map(district => (
                             <option key={district} value={district}>{district}</option>
                         ))}
                     </select>
+                </div>
 
-                    {/* Search Button */}
-                    <button
-                        onClick={handleSearch}
-                        disabled={searchTags.length === 0 || !selectedDistrict}
-                        className="btn-primary"
-                        style={{ width: '100%', marginBottom: '20px' }}
-                    >
-                        {loading ? 'Searching...' : 'Search Medicines'}
-                    </button>
-
-                    {/* Results Container */}
-                    <div>
-                        {loading ? (
-                            <div className="medisync-card" style={{ textAlign: 'center', padding: '40px' }}>
-                                <div className="spinner" style={{ margin: '0 auto 20px' }}></div>
-                                <p>🔍 Searching for medicines...</p>
-                            </div>
-                        ) : medicines.length > 0 ? (
-                            <>
-                                <div className="alert-success" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                                    <span>
-                                        📊 Found <strong>{medicines.length}</strong> medicine(s) matching 
-                                        "<strong>{searchTags.join(', ')}</strong>" in <strong>{selectedDistrict}</strong>
-                                    </span>
-                                    <span>
-                                        ✅ {medicines.filter(m => m.hasStockInDistrict).length} available | 
-                                        ⚠️ {medicines.filter(m => !m.hasStockInDistrict).length} out of stock
-                                    </span>
-                                </div>
-                                
-                                {medicines.map((medicine) => (
-                                    <ExpandableMedicineCard
-                                        key={`${medicine._id}_${medicine.weight}_${medicine.unit}`}
-                                        medicine={medicine}
-                                        onAddToWatchlist={handleOpenModal}
-                                        user={user && !isAdmin && !isDonor ? user : null}
-                                    />
-                                ))}
-                            </>
-                        ) : (
-                            searchTags.length > 0 && selectedDistrict && !loading && (
-                                <div className="medisync-card" style={{ textAlign: 'center', padding: '40px' }}>
-                                    <div style={{ fontSize: '48px', marginBottom: '20px' }}>😕</div>
-                                    <p>No medicines found matching "<strong>{searchTags.join(', ')}</strong>"</p>
-                                    <p style={{ fontSize: '14px', marginTop: '10px', color: '#666' }}>
-                                        💡 Try using different tags or check the spelling
-                                    </p>
-                                </div>
-                            )
-                        )}
-                    </div>
-                </>
-            )}
-
-            {/* Watchlist Tab */}
-            {user && !isAdmin && !isDonor && activeTab === 'watchlist' && (
-                <div>
-                    {watchlist.length > 0 ? (
-                        <WatchlistTable
-                            watchlist={watchlist}
-                            onUpdateQuantity={handleUpdateQuantity}
-                            onRemove={handleRemoveFromWatchlist}
-                            userDistrict={user.district}
-                            onRefresh={refreshWatchlist}
-                        />
+                <button
+                    onClick={handleSearch}
+                    disabled={searchTags.length === 0 || !selectedDistrict}
+                    className="search-button"
+                >
+                    {loading ? (
+                        <span className="search-loading">
+                            <span className="spinner-small"></span>
+                            Searching...
+                        </span>
                     ) : (
-                        <div className="medisync-card" style={{ textAlign: 'center', padding: '40px' }}>
-                            <div style={{ fontSize: '48px', marginBottom: '20px' }}>📭</div>
-                            <p>Your watchlist is empty.</p>
-                            <p style={{ fontSize: '14px', marginTop: '10px' }}>
-                                Search for medicines and add them to track availability in your district:
-                            </p>
-                            <p className="badge badge-primary" style={{ marginTop: '10px', display: 'inline-block', padding: '8px 16px', fontSize: '16px' }}>
-                                📍 {user.district}
-                            </p>
-                        </div>
+                        <span>
+                            🔍 Search Medicines
+                        </span>
                     )}
+                </button>
+            </div>
+        </div>
+    );
+
+    // Results Section
+    const ResultsSection = () => {
+        if (loading) {
+            return (
+                <div className="results-loading">
+                    <div className="loading-spinner"></div>
+                    <p>Searching for medicines...</p>
+                </div>
+            );
+        }
+
+        if (medicines.length === 0 && searchTags.length > 0 && selectedDistrict) {
+            return (
+                <div className="results-empty">
+                    <div className="empty-icon">🔍</div>
+                    <h3>No medicines found</h3>
+                    <p>We couldn't find any medicines matching "{searchTags.join(', ')}" in {selectedDistrict}</p>
+                    <button onClick={() => {
+                        setSearchTags([]);
+                        setInputTag('');
+                    }} className="empty-button">
+                        Clear Search
+                    </button>
+                </div>
+            );
+        }
+
+        if (medicines.length > 0) {
+            const availableCount = medicines.filter(m => m.hasStockInDistrict).length;
+            return (
+                <div className="results-section">
+                    <div className="results-header">
+                        <div className="results-info">
+                            <span className="results-badge">📊 Search Results</span>
+                            <h3>Found {medicines.length} Medicines</h3>
+                            <p>Matching "{searchTags.join(', ')}" in {selectedDistrict}</p>
+                        </div>
+                        <div className="results-stats">
+                            <div className="stat-available">
+                                <span className="stat-dot available"></span>
+                                {availableCount} Available
+                            </div>
+                            <div className="stat-unavailable">
+                                <span className="stat-dot unavailable"></span>
+                                {medicines.length - availableCount} Out of Stock
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="medicines-grid">
+                        {medicines.map((medicine) => (
+                            <ExpandableMedicineCard
+                                key={`${medicine._id}_${medicine.weight}_${medicine.unit}`}
+                                medicine={medicine}
+                                onAddToWatchlist={handleOpenModal}
+                                user={user && !isAdmin && !isDonor ? user : null}
+                            />
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        return null;
+    };
+
+    // Watchlist Section
+    const WatchlistSection = () => (
+        <div className="watchlist-section">
+            <div className="watchlist-header">
+                <div>
+                    <h2>Your Watchlist</h2>
+                    <p>Track medicines you're interested in</p>
+                </div>
+                {watchlist.length > 0 && (
+                    <button onClick={refreshWatchlist} className="refresh-button">
+                        🔄 Refresh
+                    </button>
+                )}
+            </div>
+
+            {watchlist.length > 0 ? (
+                <WatchlistTable
+                    watchlist={watchlist}
+                    onUpdateQuantity={handleUpdateQuantity}
+                    onRemove={handleRemoveFromWatchlist}
+                    userDistrict={user.district}
+                    onRefresh={refreshWatchlist}
+                />
+            ) : (
+                <div className="watchlist-empty">
+                    <div className="empty-icon">📋</div>
+                    <h3>Your watchlist is empty</h3>
+                    <p>Search for medicines and add them to your watchlist to track availability</p>
+                    <button onClick={() => setActiveTab('search')} className="empty-button">
+                        Start Searching
+                    </button>
                 </div>
             )}
+        </div>
+    );
 
-            {/* Modals */}
+    return (
+        <div className="modern-homepage">
+            <HeroSection />
+            
+            <div className="main-container">
+                {!user && <StatsSection />}
+                
+                {user && isAdmin && (
+                    <div className="admin-notice">
+                        <div className="notice-icon">👑</div>
+                        <div className="notice-content">
+                            <h4>Admin Mode Active</h4>
+                            <p>You have full access to manage medicines and users</p>
+                        </div>
+                    </div>
+                )}
+
+                {user && isDonor && (
+                    <div className="donor-welcome">
+                        <div className="donor-welcome-icon">🎁</div>
+                        <div className="donor-welcome-content">
+                            <h3>Welcome back, {user.name}!</h3>
+                            <p>Thank you for being a donor. Your contributions make a difference.</p>
+                        </div>
+                        <button onClick={() => navigate('/donor')} className="donor-action-btn">
+                            Go to Dashboard →
+                        </button>
+                    </div>
+                )}
+
+                {user && !isAdmin && !isDonor && (
+                    <div className="tabs-modern">
+                        <button
+                            onClick={() => setActiveTab('search')}
+                            className={`tab-btn ${activeTab === 'search' ? 'active' : ''}`}
+                        >
+                            <span className="tab-icon">🔍</span>
+                            Search Medicines
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('watchlist')}
+                            className={`tab-btn ${activeTab === 'watchlist' ? 'active' : ''}`}
+                        >
+                            <span className="tab-icon">📋</span>
+                            My Watchlist
+                            {watchlist.length > 0 && <span className="tab-badge">{watchlist.length}</span>}
+                        </button>
+                    </div>
+                )}
+
+                {user && isDonor && (
+                    <div className="tabs-modern">
+                        <button
+                            onClick={() => setActiveTab('search')}
+                            className={`tab-btn ${activeTab === 'search' ? 'active' : ''}`}
+                        >
+                            <span className="tab-icon">🔍</span>
+                            Search Medicines
+                        </button>
+                        <button
+                            onClick={() => navigate('/donor')}
+                            className="tab-btn"
+                        >
+                            <span className="tab-icon">🎁</span>
+                            Donor Dashboard
+                        </button>
+                    </div>
+                )}
+
+                {activeTab === 'search' && (
+                    <>
+                        <SearchSection />
+                        <ResultsSection />
+                    </>
+                )}
+
+                {activeTab === 'watchlist' && user && !isAdmin && !isDonor && (
+                    <WatchlistSection />
+                )}
+            </div>
+
             {showModal && selectedMedicine && !isAdmin && (
                 <AddToWatchlistModal
                     isOpen={showModal}
