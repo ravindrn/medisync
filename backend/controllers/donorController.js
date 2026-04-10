@@ -11,8 +11,8 @@ const {
     sendDonationNotificationToHospital,
     sendDonationCompletedNotification,
     sendDonationUpdateEmail,
-    sendDonationCancelledEmail
-    
+    sendDonationCancelledEmail,
+    sendDonationDeliveredEmail  // ← ADD THIS - it was missing!
 } = require('../services/emailService');
 const { generateTransferDocument } = require('../services/pdfService');
 const fs = require('fs');
@@ -998,11 +998,10 @@ module.exports = {
     approveDonation,
     completeDonation,
     rejectDonation,
-    getDonationForEdit,   // Add this
-    updateDonation,       // Add this
-    cancelDonation,       // Add this
-    getPendingDeliveries,           // ← ADD THIS
-    confirmDonationReceipt,         // ← ADD THIS
-    completeDonationAfterDelivery   // ← ADD THIS
-
+    getDonationForEdit,
+    updateDonation,
+    cancelDonation,
+    getPendingDeliveries,
+    confirmDonationReceipt,
+    completeDonationAfterDelivery
 };
