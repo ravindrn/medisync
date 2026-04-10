@@ -199,40 +199,6 @@ const HomePage = () => {
         </div>
     );
 
-    // Stats Section
-    const StatsSection = () => (
-        <div className="stats-grid">
-            <div className="stat-card-modern">
-                <div className="stat-icon-modern">💊</div>
-                <div className="stat-content">
-                    <h3>500+</h3>
-                    <p>Medicines Available</p>
-                </div>
-            </div>
-            <div className="stat-card-modern">
-                <div className="stat-icon-modern">🏥</div>
-                <div className="stat-content">
-                    <h3>25+</h3>
-                    <p>Partner Hospitals</p>
-                </div>
-            </div>
-            <div className="stat-card-modern">
-                <div className="stat-icon-modern">🤝</div>
-                <div className="stat-content">
-                    <h3>1000+</h3>
-                    <p>Donations Processed</p>
-                </div>
-            </div>
-            <div className="stat-card-modern">
-                <div className="stat-icon-modern">📍</div>
-                <div className="stat-content">
-                    <h3>9</h3>
-                    <p>Districts Covered</p>
-                </div>
-            </div>
-        </div>
-    );
-
     // Search Section
     const SearchSection = () => (
         <div className="search-section">
@@ -411,8 +377,6 @@ const HomePage = () => {
             <HeroSection />
             
             <div className="main-container">
-                {!user && <StatsSection />}
-                
                 {user && isAdmin && (
                     <div className="admin-notice">
                         <div className="notice-icon">👑</div>
