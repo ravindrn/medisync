@@ -460,23 +460,24 @@
 /* Modern Homepage Styles */
 .modern-homepage {
     min-height: 100vh;
+    background: transparent;
 }
 
 /* Hero Section */
 .hero-section {
     text-align: center;
-    padding: 80px 20px 60px;
-    background: linear-gradient(135deg, rgba(42, 156, 193, 0.1) 0%, rgba(71, 178, 194, 0.05) 100%);
+    padding: 60px 20px 80px;
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 0 0 40px 40px;
     margin-bottom: 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .hero-badge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: rgba(42, 156, 193, 0.15);
-    backdrop-filter: blur(10px);
+    background: linear-gradient(135deg, rgba(42, 156, 193, 0.1) 0%, rgba(71, 178, 194, 0.1) 100%);
     padding: 8px 20px;
     border-radius: 50px;
     font-size: 14px;
@@ -561,54 +562,6 @@
     transform: translateY(-2px);
 }
 
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 24px;
-    margin-bottom: 60px;
-}
-
-.stat-card-modern {
-    background: white;
-    padding: 24px;
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(42, 156, 193, 0.1);
-}
-
-.stat-card-modern:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(42, 156, 193, 0.15);
-}
-
-.stat-icon-modern {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, rgba(42, 156, 193, 0.1) 0%, rgba(71, 178, 194, 0.1) 100%);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-}
-
-.stat-content h3 {
-    font-size: 28px;
-    font-weight: 800;
-    color: #1a1a2e;
-    margin-bottom: 4px;
-}
-
-.stat-content p {
-    color: #666;
-    font-size: 14px;
-}
-
 /* Main Container */
 .main-container {
     max-width: 1200px;
@@ -622,7 +575,7 @@
     border-radius: 24px;
     padding: 32px;
     margin-bottom: 40px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .search-header {
@@ -898,7 +851,7 @@
     background: white;
     border-radius: 24px;
     padding: 32px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .watchlist-header {
@@ -1070,11 +1023,6 @@
     
     .search-button {
         width: 100%;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
     }
     
     .results-header {
