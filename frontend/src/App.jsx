@@ -6,6 +6,7 @@ import HomePage from './components/HomePage';
 import Register from './components/Auth/Register';
 import Profile from './components/Profile/Profile';
 import './index.css';
+import './styles/medisync.css'; // Import modern CSS
 import ManagerDashboard from './components/Manager/ManagerDashboard';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import MedicineManagement from './components/Admin/MedicineManagement';
@@ -13,7 +14,7 @@ import MinistryDashboard from './components/Ministry/MinistryDashboard';
 import DonorDashboard from './components/Donor/DonorDashboard';
 import NurseDashboard from './components/Nurse/NurseDashboard';
 
-// Login Component
+// Login Component - Modernized
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,104 +35,40 @@ function Login() {
     setLoading(false);
   };
 
-  const styles = {
-    container: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '80vh',
-      backgroundColor: '#f5f5f5',
-      padding: '20px'
-    },
-    formContainer: {
-      backgroundColor: 'white',
-      padding: '40px',
-      borderRadius: '12px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-      width: '100%',
-      maxWidth: '400px'
-    },
-    title: {
-      fontSize: '28px',
-      fontWeight: 'bold',
-      marginBottom: '10px',
-      textAlign: 'center',
-      color: '#1e293b'
-    },
-    subtitle: {
-      textAlign: 'center',
-      color: '#64748b',
-      marginBottom: '30px',
-      fontSize: '14px'
-    },
-    inputGroup: {
-      marginBottom: '20px'
-    },
-    label: {
-      display: 'block',
-      marginBottom: '8px',
-      fontWeight: '500',
-      color: '#475569',
-      fontSize: '14px'
-    },
-    input: {
-      width: '100%',
-      padding: '12px',
-      border: '1px solid #cbd5e1',
-      borderRadius: '8px',
-      fontSize: '16px'
-    },
-    button: {
-      width: '100%',
-      padding: '12px',
-      backgroundColor: '#3b82f6',
-      color: 'white',
-      border: 'none',
-      borderRadius: '8px',
-      fontSize: '16px',
-      fontWeight: 'bold',
-      cursor: 'pointer',
-      marginTop: '10px'
-    },
-    buttonDisabled: {
-      backgroundColor: '#9ca3af',
-      cursor: 'not-allowed'
-    },
-    link: {
-      textAlign: 'center',
-      marginTop: '20px',
-      color: '#3b82f6',
-      textDecoration: 'none',
-      display: 'block'
-    }
-  };
-
   return (
-    <div style={styles.container}>
-      <div style={styles.formContainer}>
-        <h2 style={styles.title}>Welcome Back</h2>
-        <p style={styles.subtitle}>Login to your MediSync account</p>
+    <div className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="medisync-card" style={{ maxWidth: '450px', width: '100%' }}>
+        <h2 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '10px', textAlign: 'center', color: '#1a1a2e' }}>
+          Welcome Back
+        </h2>
+        <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px', fontSize: '14px' }}>
+          Login to your MediSync account
+        </p>
         
         <form onSubmit={handleSubmit}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Email Address</label>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#333', fontSize: '14px' }}>
+              Email Address
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
+              className="modern-input"
               placeholder="you@example.com"
               required
             />
           </div>
           
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Password</label>
+          <div style={{ marginBottom: '25px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#333', fontSize: '14px' }}>
+              Password
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
+              className="modern-input"
               placeholder="Enter your password"
               required
             />
@@ -140,16 +77,14 @@ function Login() {
           <button 
             type="submit" 
             disabled={loading}
-            style={{
-              ...styles.button,
-              ...(loading ? styles.buttonDisabled : {})
-            }}
+            className="btn-primary"
+            style={{ width: '100%' }}
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
         
-        <Link to="/register" style={styles.link}>
+        <Link to="/register" style={{ textAlign: 'center', marginTop: '20px', color: '#2A9CC1', textDecoration: 'none', display: 'block' }}>
           Don't have an account? Create one
         </Link>
       </div>
@@ -157,7 +92,7 @@ function Login() {
   );
 }
 
-// Navbar Component
+// Navbar Component - Modernized
 function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -168,126 +103,37 @@ function Navbar() {
     navigate('/');
   };
 
-  const styles = {
-    nav: {
-      backgroundColor: '#3b82f6',
-      padding: '15px 20px',
-      color: 'white',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-    },
-    container: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      flexWrap: 'wrap',
-      gap: '15px'
-    },
-    logo: {
-      color: 'white',
-      textDecoration: 'none',
-      fontSize: '24px',
-      fontWeight: 'bold'
-    },
-    links: {
-      display: 'flex',
-      gap: '20px',
-      alignItems: 'center',
-      flexWrap: 'wrap'
-    },
-    link: {
-      color: 'white',
-      textDecoration: 'none',
-      padding: '8px 16px',
-      borderRadius: '8px',
-      transition: 'background-color 0.3s'
-    },
-    adminLink: {
-      backgroundColor: '#ef4444',
-      color: 'white',
-      textDecoration: 'none',
-      padding: '8px 16px',
-      borderRadius: '8px',
-      transition: 'background-color 0.3s',
-      fontWeight: 'bold'
-    },
-    donorLink: {
-      backgroundColor: '#10b981',
-      color: 'white',
-      textDecoration: 'none',
-      padding: '8px 16px',
-      borderRadius: '8px',
-      transition: 'background-color 0.3s',
-      fontWeight: 'bold'
-    },
-    nurseLink: {
-      backgroundColor: '#14b8a6',
-      color: 'white',
-      textDecoration: 'none',
-      padding: '8px 16px',
-      borderRadius: '8px',
-      transition: 'background-color 0.3s',
-      fontWeight: 'bold'
-    },
-    userInfo: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '15px',
-      flexWrap: 'wrap'
-    },
-    districtBadge: {
-      backgroundColor: '#1e40af',
-      padding: '6px 14px',
-      borderRadius: '20px',
-      fontSize: '13px',
-      fontWeight: '500',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '5px'
-    },
-    logoutButton: {
-      backgroundColor: '#ef4444',
-      color: 'white',
-      border: 'none',
-      padding: '8px 16px',
-      borderRadius: '8px',
-      cursor: 'pointer',
-      fontSize: '14px',
-      fontWeight: '500',
-      transition: 'background-color 0.3s'
-    }
-  };
-
   return (
-    <nav style={styles.nav}>
-      <div style={styles.container}>
-        <Link to="/" style={styles.logo}>
+    <nav className="navbar">
+      <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+        <Link to="/" className="nav-brand" style={{ fontSize: '24px', fontWeight: 'bold', textDecoration: 'none' }}>
           🏥 MediSync
         </Link>
-        <div style={styles.links}>
+        
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
           {user ? (
-            <div style={styles.userInfo}>
-              <span>Welcome, {user.name}</span>
-              <span style={styles.districtBadge}>
+            <>
+              <span style={{ color: '#1a1a2e', fontWeight: '500' }}>Welcome, {user.name}</span>
+              
+              <span className="badge badge-primary" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 📍 {user.district}
               </span>
               
               {/* Profile Link */}
-              <Link to="/profile" style={styles.link}>
+              <Link to="/profile" className="nav-link">
                 👤 Profile
               </Link>
               
               {/* Donor Link - Show for donor role */}
               {user.role === 'donor' && (
-                <Link to="/donor" style={styles.donorLink}>
+                <Link to="/donor" className="btn-primary" style={{ padding: '8px 20px', textDecoration: 'none' }}>
                   ❤️ Donor Dashboard
                 </Link>
               )}
               
               {/* Nurse Link - Show for nurse role */}
               {user.role === 'nurse' && (
-                <Link to="/nurse" style={styles.nurseLink}>
+                <Link to="/nurse" className="btn-primary" style={{ padding: '8px 20px', textDecoration: 'none', background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)' }}>
                   🩺 Nurse Dashboard
                 </Link>
               )}
@@ -295,35 +141,35 @@ function Navbar() {
               {/* Admin Links - Only visible to admin users */}
               {user.role === 'admin' && (
                 <>
-                  <Link to="/admin" style={styles.adminLink}>
+                  <Link to="/admin" className="btn-primary" style={{ padding: '8px 20px', textDecoration: 'none', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}>
                     👑 Admin Dashboard
                   </Link>
-                  <Link to="/admin/medicines" style={styles.adminLink}>
+                  <Link to="/admin/medicines" className="btn-secondary" style={{ padding: '8px 20px', textDecoration: 'none' }}>
                     📦 Manage Medicines
                   </Link>
                 </>
               )}
 
               {user.role === 'manager' && (
-                <Link to="/manager" style={styles.link}>
+                <Link to="/manager" className="nav-link">
                   🏥 Hospital Dashboard
                 </Link>
               )}
 
               {user.role === 'ministry_officer' && (
-                <Link to="/ministry" style={styles.link}>
+                <Link to="/ministry" className="nav-link">
                   🏛️ Ministry Dashboard
                 </Link>
               )} 
               
-              <button onClick={handleLogout} style={styles.logoutButton}>
+              <button onClick={handleLogout} className="btn-secondary" style={{ padding: '8px 20px' }}>
                 Logout
               </button>
-            </div>
+            </>
           ) : (
             <>
-              <Link to="/login" style={styles.link}>Login</Link>
-              <Link to="/register" style={styles.link}>Register</Link>
+              <Link to="/login" className="nav-link">Login</Link>
+              <Link to="/register" className="btn-primary" style={{ textDecoration: 'none' }}>Register</Link>
             </>
           )}
         </div>
@@ -350,7 +196,20 @@ function App() {
           <Route path="/donor/*" element={<DonorDashboard />} />
           <Route path="/nurse" element={<NurseDashboard />} />
         </Routes>
-        <Toaster position="top-right" />
+        <Toaster position="top-right" toastOptions={{
+          style: {
+            borderRadius: '12px',
+            background: '#fff',
+            color: '#1a1a2e',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+          },
+          success: {
+            iconTheme: {
+              primary: '#2A9CC1',
+              secondary: '#fff',
+            },
+          },
+        }} />
       </AuthProvider>
     </Router>
   );
