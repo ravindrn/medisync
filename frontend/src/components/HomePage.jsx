@@ -7,6 +7,7 @@ import ExpandableMedicineCard from './Medicines/ExpandableMedicineCard';
 import WatchlistTable from './Watchlist/WatchlistTable';
 import AddToWatchlistModal from './Medicines/AddToWatchlistModal';
 import DonorPrompt from './Donor/DonorPrompt';
+import '../styles/medisync.css';
 
 const HomePage = () => {
     const { user } = useAuth();
@@ -173,235 +174,39 @@ const HomePage = () => {
         }
     };
 
-    const styles = {
-        container: {
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: '20px'
-        },
-        header: {
-            textAlign: 'center',
-            marginBottom: '30px',
-            padding: '30px',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        },
-        title: {
-            fontSize: '32px',
-            fontWeight: 'bold',
-            color: '#1e293b',
-            marginBottom: '10px'
-        },
-        subtitle: {
-            fontSize: '16px',
-            color: '#64748b'
-        },
-        donorCallout: {
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '30px',
-            color: 'white',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        },
-        donorContent: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '20px'
-        },
-        donorText: {
-            flex: 1
-        },
-        donorIcon: {
-            fontSize: '48px',
-            marginBottom: '8px'
-        },
-        donorTitle: {
-            fontSize: '20px',
-            fontWeight: 'bold',
-            marginBottom: '4px'
-        },
-        donorDescription: {
-            fontSize: '14px',
-            opacity: 0.9
-        },
-        donorButton: {
-            backgroundColor: 'white',
-            color: '#667eea',
-            border: 'none',
-            padding: '12px 28px',
-            borderRadius: '40px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        },
-        publicNotice: {
-            backgroundColor: '#fef3c7',
-            borderLeft: '4px solid #f59e0b',
-            padding: '15px',
-            marginBottom: '20px',
-            borderRadius: '8px',
-            textAlign: 'center'
-        },
-        adminNotice: {
-            backgroundColor: '#dbeafe',
-            borderLeft: '4px solid #3b82f6',
-            padding: '15px',
-            marginBottom: '20px',
-            borderRadius: '8px',
-            textAlign: 'center'
-        },
-        districtInfoBanner: {
-            backgroundColor: '#e0f2fe',
-            padding: '12px',
-            marginBottom: '15px',
-            borderRadius: '8px',
-            borderLeft: '4px solid #0284c7',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap'
-        },
-        tabs: {
-            display: 'flex',
-            gap: '10px',
-            marginBottom: '20px',
-            backgroundColor: 'white',
-            padding: '10px',
-            borderRadius: '12px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        },
-        tab: {
-            padding: '10px 20px',
-            cursor: 'pointer',
-            border: 'none',
-            background: 'none',
-            fontSize: '16px',
-            fontWeight: '500',
-            borderRadius: '8px',
-            transition: 'all 0.3s'
-        },
-        activeTab: {
-            backgroundColor: '#3b82f6',
-            color: 'white'
-        },
-        searchArea: {
-            border: '2px solid #e5e7eb',
-            padding: '15px',
-            borderRadius: '8px',
-            marginBottom: '20px',
-            backgroundColor: 'white'
-        },
-        tagsContainer: {
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '10px',
-            marginBottom: '10px'
-        },
-        tag: {
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            padding: '5px 12px',
-            borderRadius: '20px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '14px'
-        },
-        removeTag: {
-            background: 'none',
-            border: 'none',
-            color: 'white',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold'
-        },
-        tagInput: {
-            padding: '8px',
-            border: 'none',
-            outline: 'none',
-            flex: 1,
-            minWidth: '200px',
-            fontSize: '14px'
-        },
-        districtSelect: {
-            width: '100%',
-            padding: '12px',
-            marginBottom: '15px',
-            borderRadius: '8px',
-            border: '2px solid #e5e7eb',
-            fontSize: '16px',
-            backgroundColor: 'white'
-        },
-        searchButton: {
-            width: '100%',
-            padding: '12px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: 'pointer'
-        },
-        searchButtonDisabled: {
-            backgroundColor: '#9ca3af',
-            cursor: 'not-allowed'
-        },
-        resultsContainer: {
-            marginTop: '20px'
-        },
-        loadingContainer: {
-            textAlign: 'center',
-            padding: '40px',
-            fontSize: '18px',
-            color: '#64748b',
-            backgroundColor: 'white',
-            borderRadius: '12px'
-        },
-        warningText: {
-            color: '#f59e0b',
-            fontSize: '12px',
-            marginLeft: '10px'
-        }
-    };
-
     return (
-        <div style={styles.container}>
-            <div style={styles.header}>
-                <h1 style={styles.title}>🏥 Medicine Stock Finder</h1>
-                <p style={styles.subtitle}>
+        <div className="container" style={{ padding: '20px' }}>
+            {/* Header Section */}
+            <div className="medisync-card" style={{ textAlign: 'center', marginBottom: '30px' }}>
+                <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#1a1a2e', marginBottom: '10px' }}>
+                    🏥 Medicine Stock Finder
+                </h1>
+                <p style={{ fontSize: '16px', color: '#666' }}>
                     Search for medicines by name tags and find availability in your district
                 </p>
             </div>
 
             {/* Donor Callout Section */}
             {!user && (
-                <div style={styles.donorCallout}>
-                    <div style={styles.donorContent}>
-                        <div style={styles.donorText}>
-                            <div style={styles.donorIcon}>🤝</div>
-                            <div style={styles.donorTitle}>Join Our Donor Community!</div>
-                            <div style={styles.donorDescription}>
+                <div className="glass-effect" style={{ 
+                    background: 'linear-gradient(135deg, #2A9CC1 0%, #47B2C2 100%)',
+                    borderRadius: '20px',
+                    padding: '24px',
+                    marginBottom: '30px',
+                    color: 'white'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '48px', marginBottom: '8px' }}>🤝</div>
+                            <div style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '4px' }}>Join Our Donor Community!</div>
+                            <div style={{ fontSize: '14px', opacity: 0.9 }}>
                                 Your unused medicines can save lives. Donate to hospitals in need and make a difference.
                             </div>
                         </div>
                         <button
                             onClick={() => setShowDonorPrompt(true)}
-                            style={styles.donorButton}
-                            onMouseEnter={(e) => {
-                                e.target.style.transform = 'scale(1.05)';
-                                e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.transform = 'scale(1)';
-                                e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                            }}
+                            className="btn-primary"
+                            style={{ backgroundColor: 'white', color: '#2A9CC1', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
                         >
                             Become a Donor ❤️
                         </button>
@@ -411,18 +216,25 @@ const HomePage = () => {
 
             {/* Donor Welcome Message */}
             {user && isDonor && (
-                <div style={styles.donorCallout}>
-                    <div style={styles.donorContent}>
-                        <div style={styles.donorText}>
-                            <div style={styles.donorIcon}>🎁</div>
-                            <div style={styles.donorTitle}>Welcome back, Donor {user?.name}!</div>
-                            <div style={styles.donorDescription}>
+                <div className="glass-effect" style={{ 
+                    background: 'linear-gradient(135deg, #2A9CC1 0%, #47B2C2 100%)',
+                    borderRadius: '20px',
+                    padding: '24px',
+                    marginBottom: '30px',
+                    color: 'white'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎁</div>
+                            <div style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '4px' }}>Welcome back, Donor {user?.name}!</div>
+                            <div style={{ fontSize: '14px', opacity: 0.9 }}>
                                 Thank you for your generosity! Your donations are making a difference.
                             </div>
                         </div>
                         <button
                             onClick={() => navigate('/donor')}
-                            style={styles.donorButton}
+                            className="btn-primary"
+                            style={{ backgroundColor: 'white', color: '#2A9CC1' }}
                         >
                             Go to Donor Dashboard →
                         </button>
@@ -430,96 +242,84 @@ const HomePage = () => {
                 </div>
             )}
 
+            {/* Public Notice */}
             {!user && (
-                <div style={styles.publicNotice}>
-                    <p style={{ color: '#92400e', margin: 0 }}>
-                        🔍 <strong>Public Search:</strong> You can search for medicines without logging in!
-                        <br />
-                        📝 <strong>Tip:</strong> Login to add medicines to your watchlist and track availability!
-                    </p>
+                <div className="alert-info" style={{ marginBottom: '20px' }}>
+                    🔍 <strong>Public Search:</strong> You can search for medicines without logging in!
+                    <br />
+                    📝 <strong>Tip:</strong> Login to add medicines to your watchlist and track availability!
                 </div>
             )}
 
+            {/* Admin Notice */}
             {user && isAdmin && (
-                <div style={styles.adminNotice}>
-                    <p style={{ color: '#1e40af', margin: 0 }}>
-                        👑 <strong>Admin Mode:</strong> You are logged in as an administrator.
-                        <br />
-                        📦 Use the <strong>Admin Dashboard</strong> and <strong>Manage Medicines</strong> links above to manage the system.
-                    </p>
+                <div className="alert-info" style={{ marginBottom: '20px', background: 'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)', borderLeftColor: '#3b82f6' }}>
+                    👑 <strong>Admin Mode:</strong> You are logged in as an administrator.
+                    <br />
+                    📦 Use the <strong>Admin Dashboard</strong> and <strong>Manage Medicines</strong> links above to manage the system.
                 </div>
             )}
 
-            {/* Only show tabs for non-admin users */}
+            {/* Tabs for non-admin users */}
             {user && !isAdmin && !isDonor && (
-                <div style={styles.tabs}>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
                     <button
                         onClick={() => setActiveTab('search')}
-                        style={{
-                            ...styles.tab,
-                            ...(activeTab === 'search' ? styles.activeTab : {})
-                        }}
+                        className={activeTab === 'search' ? 'btn-primary' : 'btn-secondary'}
                     >
                         🔍 Search Medicines
                     </button>
                     <button
                         onClick={() => setActiveTab('watchlist')}
-                        style={{
-                            ...styles.tab,
-                            ...(activeTab === 'watchlist' ? styles.activeTab : {})
-                        }}
+                        className={activeTab === 'watchlist' ? 'btn-primary' : 'btn-secondary'}
                     >
                         📋 My Watchlist ({watchlist.length})
                     </button>
                 </div>
             )}
 
-            {/* Donor tabs - Updated to use navigate directly */}
+            {/* Donor tabs */}
             {user && isDonor && (
-                <div style={styles.tabs}>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
                     <button
                         onClick={() => setActiveTab('search')}
-                        style={{
-                            ...styles.tab,
-                            ...(activeTab === 'search' ? styles.activeTab : {})
-                        }}
+                        className={activeTab === 'search' ? 'btn-primary' : 'btn-secondary'}
                     >
                         🔍 Search Medicines
                     </button>
                     <button
                         onClick={() => navigate('/donor')}
-                        style={{
-                            ...styles.tab,
-                            ...(activeTab === 'donor' ? styles.activeTab : {})
-                        }}
+                        className={activeTab === 'donor' ? 'btn-primary' : 'btn-secondary'}
                     >
                         🎁 Donor Dashboard
                     </button>
                 </div>
             )}
 
+            {/* Search Tab Content */}
             {activeTab === 'search' && (
                 <>
-                    {/* District Info Banner for Search - Show for non-admin users only */}
+                    {/* District Info Banner */}
                     {user && !isAdmin && selectedDistrict && (
-                        <div style={styles.districtInfoBanner}>
-                            <span style={{ color: '#0369a1' }}>
+                        <div className="alert-info" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span>
                                 📍 Showing results for district: <strong>{selectedDistrict}</strong>
                             </span>
                             {user.district !== selectedDistrict && (
-                                <span style={styles.warningText}>
+                                <span style={{ color: '#f59e0b', fontSize: '12px' }}>
                                     ⚠️ This is different from your registered district ({user.district})
                                 </span>
                             )}
                         </div>
                     )}
 
-                    <div style={styles.searchArea}>
-                        <div style={styles.tagsContainer}>
+                    {/* Search Input Area */}
+                    <div className="medisync-card" style={{ marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '10px' }}>
                             {searchTags.map((tag, index) => (
-                                <span key={index} style={styles.tag}>
+                                <span key={index} className="badge badge-primary" style={{ padding: '5px 12px' }}>
                                     {tag}
-                                    <button onClick={() => removeTag(tag)} style={styles.removeTag}>
+                                    <button onClick={() => removeTag(tag)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', marginLeft: '8px', fontWeight: 'bold' }}>
                                         ×
                                     </button>
                                 </span>
@@ -530,7 +330,8 @@ const HomePage = () => {
                                 onChange={(e) => setInputTag(e.target.value)}
                                 onKeyDown={handleAddTag}
                                 placeholder="Type medicine name prefix and press Enter (e.g., 'amo', 'para')..."
-                                style={styles.tagInput}
+                                className="modern-input"
+                                style={{ flex: 1, minWidth: '200px' }}
                             />
                         </div>
                         <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
@@ -538,10 +339,12 @@ const HomePage = () => {
                         </p>
                     </div>
 
+                    {/* District Select */}
                     <select
                         value={selectedDistrict}
                         onChange={(e) => setSelectedDistrict(e.target.value)}
-                        style={styles.districtSelect}
+                        className="modern-select"
+                        style={{ marginBottom: '20px' }}
                     >
                         <option value="">Select District</option>
                         {districts.map(district => (
@@ -549,35 +352,26 @@ const HomePage = () => {
                         ))}
                     </select>
 
+                    {/* Search Button */}
                     <button
                         onClick={handleSearch}
                         disabled={searchTags.length === 0 || !selectedDistrict}
-                        style={{
-                            ...styles.searchButton,
-                            ...(searchTags.length === 0 || !selectedDistrict ? styles.searchButtonDisabled : {})
-                        }}
+                        className="btn-primary"
+                        style={{ width: '100%', marginBottom: '20px' }}
                     >
                         {loading ? 'Searching...' : 'Search Medicines'}
                     </button>
 
-                    <div style={styles.resultsContainer}>
+                    {/* Results Container */}
+                    <div>
                         {loading ? (
-                            <div style={styles.loadingContainer}>🔍 Searching for medicines...</div>
+                            <div className="medisync-card" style={{ textAlign: 'center', padding: '40px' }}>
+                                <div className="spinner" style={{ margin: '0 auto 20px' }}></div>
+                                <p>🔍 Searching for medicines...</p>
+                            </div>
                         ) : medicines.length > 0 ? (
                             <>
-                                <div style={{
-                                    backgroundColor: '#f0fdf4',
-                                    padding: '12px 16px',
-                                    borderRadius: '8px',
-                                    marginBottom: '16px',
-                                    fontSize: '14px',
-                                    color: '#166534',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    flexWrap: 'wrap',
-                                    gap: '10px'
-                                }}>
+                                <div className="alert-success" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
                                     <span>
                                         📊 Found <strong>{medicines.length}</strong> medicine(s) matching 
                                         "<strong>{searchTags.join(', ')}</strong>" in <strong>{selectedDistrict}</strong>
@@ -599,12 +393,12 @@ const HomePage = () => {
                             </>
                         ) : (
                             searchTags.length > 0 && selectedDistrict && !loading && (
-                                <div style={styles.loadingContainer}>
-                                    😕 No medicines found matching "<strong>{searchTags.join(', ')}</strong>"
-                                    <br />
-                                    <span style={{ fontSize: '14px', marginTop: '10px', display: 'block', color: '#6b7280' }}>
+                                <div className="medisync-card" style={{ textAlign: 'center', padding: '40px' }}>
+                                    <div style={{ fontSize: '48px', marginBottom: '20px' }}>😕</div>
+                                    <p>No medicines found matching "<strong>{searchTags.join(', ')}</strong>"</p>
+                                    <p style={{ fontSize: '14px', marginTop: '10px', color: '#666' }}>
                                         💡 Try using different tags or check the spelling
-                                    </span>
+                                    </p>
                                 </div>
                             )
                         )}
@@ -612,7 +406,7 @@ const HomePage = () => {
                 </>
             )}
 
-            {/* Watchlist - Only show for non-admin non-donor users */}
+            {/* Watchlist Tab */}
             {user && !isAdmin && !isDonor && activeTab === 'watchlist' && (
                 <div>
                     {watchlist.length > 0 ? (
@@ -624,22 +418,13 @@ const HomePage = () => {
                             onRefresh={refreshWatchlist}
                         />
                     ) : (
-                        <div style={styles.loadingContainer}>
-                            <span style={{ fontSize: '48px', display: 'block', marginBottom: '20px' }}>📭</span>
+                        <div className="medisync-card" style={{ textAlign: 'center', padding: '40px' }}>
+                            <div style={{ fontSize: '48px', marginBottom: '20px' }}>📭</div>
                             <p>Your watchlist is empty.</p>
                             <p style={{ fontSize: '14px', marginTop: '10px' }}>
                                 Search for medicines and add them to track availability in your district:
                             </p>
-                            <p style={{ 
-                                fontSize: '16px', 
-                                fontWeight: 'bold', 
-                                color: '#3b82f6',
-                                marginTop: '10px',
-                                padding: '8px 16px',
-                                backgroundColor: '#e0f2fe',
-                                borderRadius: '8px',
-                                display: 'inline-block'
-                            }}>
+                            <p className="badge badge-primary" style={{ marginTop: '10px', display: 'inline-block', padding: '8px 16px', fontSize: '16px' }}>
                                 📍 {user.district}
                             </p>
                         </div>
@@ -647,6 +432,7 @@ const HomePage = () => {
                 </div>
             )}
 
+            {/* Modals */}
             {showModal && selectedMedicine && !isAdmin && (
                 <AddToWatchlistModal
                     isOpen={showModal}
