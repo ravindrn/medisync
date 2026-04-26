@@ -199,8 +199,26 @@ const HomePage = () => {
         </div>
     );
 
-    // Search Section
-    const SearchSection = () => (
+   // Search Section Component (updated)
+const SearchSection = () => {
+    const [localTagInput, setLocalTagInput] = useState('');
+    const [localIsFocused, setLocalIsFocused] = useState(false);
+
+    const handleLocalAddTag = (e) => {
+        if (e.key === 'Enter' && localTagInput.trim()) {
+            e.preventDefault();
+            if (!searchTags.includes(localTagInput.trim().toLowerCase())) {
+                setSearchTags([...searchTags, localTagInput.trim().toLowerCase()]);
+            }
+            setLocalTagInput('');
+        }
+    };
+
+    const handleLocalRemoveTag = (tagToRemove) => {
+        setSearchTags(searchTags.filter(tag => tag !== tagToRemove));
+    };
+
+    return (
         <div className="search-section">
             <div className="search-header">
                 <h2>Search Medicines</h2>
@@ -213,21 +231,27 @@ const HomePage = () => {
                         {searchTags.map((tag, index) => (
                             <span key={index} className="tag-item">
                                 {tag}
-                                <button onClick={() => removeTag(tag)} className="tag-remove">×</button>
+                                <button 
+                                    onClick={() => handleLocalRemoveTag(tag)} 
+                                    className="tag-remove"
+                                    type="button"
+                                >
+                                    ×
+                                </button>
                             </span>
                         ))}
                         <input
                             type="text"
-                            value={inputTag}
-                            onChange={(e) => setInputTag(e.target.value)}
-                            onKeyDown={handleAddTag}
-                            onFocus={() => setIsFocused(true)}
-                            onBlur={() => setIsFocused(false)}
+                            value={localTagInput}
+                            onChange={(e) => setLocalTagInput(e.target.value)}
+                            onKeyDown={handleLocalAddTag}
+                            onFocus={() => setLocalIsFocused(true)}
+                            onBlur={() => setLocalIsFocused(false)}
                             placeholder={searchTags.length === 0 ? "Type medicine name and press Enter..." : ""}
                             className="tags-input"
                         />
                     </div>
-                    {isFocused && (
+                    {localIsFocused && (
                         <div className="tags-suggestions">
                             <p>💡 Try: paracetamol, amoxicillin, vitamin, insulin</p>
                         </div>
@@ -261,14 +285,13 @@ const HomePage = () => {
                             Searching...
                         </span>
                     ) : (
-                        <span>
-                            🔍 Search Medicines
-                        </span>
+                        <span>🔍 Search Medicines</span>
                     )}
                 </button>
             </div>
         </div>
     );
+};
 
     // Results Section
     const ResultsSection = () => {
