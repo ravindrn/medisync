@@ -74,43 +74,44 @@ const HomePage = () => {
     };
 
     const handleSearch = async () => {
-        if (searchTags.length === 0) {
-            toast.error('Please add at least one search tag');
-            return;
-        }
+    if (searchTags.length === 0) {
+        toast.error('Please add at least one search tag');
+        return;
+    }
+    
+    if (!selectedDistrict) {
+        toast.error('Please select a district');
+        return;
+    }
+
+    setLoading(true);
+    setSearchPerformed(true); // Add this line - mark that search has been performed
+    
+    try {
+        const response = await api.post('/medicines/search', { 
+            tags: searchTags, 
+            district: selectedDistrict 
+        });
+        setMedicines(response.data);
         
-        if (!selectedDistrict) {
-            toast.error('Please select a district');
-            return;
+        const totalMedicines = response.data.length;
+        const medicinesWithStock = response.data.filter(m => m.hasStockInDistrict).length;
+        const medicinesWithoutStock = totalMedicines - medicinesWithStock;
+        
+        if (totalMedicines === 0) {
+            toast.error(`No medicines found matching "${searchTags.join(', ')}"`);
+        } else {
+            toast.success(
+                `Found ${totalMedicines} medicine(s) - ${medicinesWithStock} available, ${medicinesWithoutStock} currently out of stock`
+            );
         }
-
-        setLoading(true);
-        try {
-            const response = await api.post('/medicines/search', { 
-                tags: searchTags, 
-                district: selectedDistrict 
-            });
-            setMedicines(response.data);
-            
-            const totalMedicines = response.data.length;
-            const medicinesWithStock = response.data.filter(m => m.hasStockInDistrict).length;
-            const medicinesWithoutStock = totalMedicines - medicinesWithStock;
-            
-            if (totalMedicines === 0) {
-                toast.error(`No medicines found matching "${searchTags.join(', ')}"`);
-            } else {
-                toast.success(
-                    `Found ${totalMedicines} medicine(s) - ${medicinesWithStock} available, ${medicinesWithoutStock} currently out of stock`
-                );
-            }
-        } catch (error) {
-            toast.error('Failed to search medicines');
-            console.error('Search error:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    } catch (error) {
+        toast.error('Failed to search medicines');
+        console.error('Search error:', error);
+    } finally {
+        setLoading(false);
+    }
+};
     const fetchWatchlist = async () => {
         try {
             const response = await api.get('/medicines/watchlist');
@@ -294,70 +295,73 @@ const SearchSection = () => {
 };
 
     // Results Section
-    const ResultsSection = () => {
-        if (loading) {
-            return (
-                <div className="results-loading">
-                    <div className="loading-spinner"></div>
-                    <p>Searching for medicines...</p>
-                </div>
-            );
-        }
-
-        if (medicines.length === 0 && searchTags.length > 0 && selectedDistrict) {
-            return (
-                <div className="results-empty">
-                    <div className="empty-icon">🔍</div>
-                    <h3>No medicines found</h3>
-                    <p>We couldn't find any medicines matching "{searchTags.join(', ')}" in {selectedDistrict}</p>
-                    <button onClick={() => {
-                        setSearchTags([]);
-                        setInputTag('');
-                    }} className="empty-button">
-                        Clear Search
-                    </button>
-                </div>
-            );
-        }
-
-        if (medicines.length > 0) {
-            const availableCount = medicines.filter(m => m.hasStockInDistrict).length;
-            return (
-                <div className="results-section">
-                    <div className="results-header">
-                        <div className="results-info">
-                            <span className="results-badge">📊 Search Results</span>
-                            <h3>Found {medicines.length} Medicines</h3>
-                            <p>Matching "{searchTags.join(', ')}" in {selectedDistrict}</p>
-                        </div>
-                        <div className="results-stats">
-                            <div className="stat-available">
-                                <span className="stat-dot available"></span>
-                                {availableCount} Available
-                            </div>
-                            <div className="stat-unavailable">
-                                <span className="stat-dot unavailable"></span>
-                                {medicines.length - availableCount} Out of Stock
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="medicines-grid">
-                        {medicines.map((medicine) => (
-                            <ExpandableMedicineCard
-                                key={`${medicine._id}_${medicine.weight}_${medicine.unit}`}
-                                medicine={medicine}
-                                onAddToWatchlist={handleOpenModal}
-                                user={user && !isAdmin && !isDonor ? user : null}
-                            />
-                        ))}
-                    </div>
-                </div>
-            );
-        }
-
+const ResultsSection = () => {
+    // Don't show anything if search hasn't been performed yet
+    if (!searchPerformed) {
         return null;
-    };
+    }
+
+    if (loading) {
+        return (
+            <div className="results-loading">
+                <div className="loading-spinner"></div>
+                <p>Searching for medicines...</p>
+            </div>
+        );
+    }
+
+    if (medicines.length === 0) {
+        return (
+            <div className="results-empty">
+                <div className="empty-icon">🔍</div>
+                <h3>No medicines found</h3>
+                <p>We couldn't find any medicines matching "{searchTags.join(', ')}" in {selectedDistrict}</p>
+                <button onClick={() => {
+                    setSearchTags([]);
+                    setTagInputValue('');
+                    setSearchPerformed(false); // Reset search performed
+                }} className="empty-button">
+                    Clear Search
+                </button>
+            </div>
+        );
+    }
+
+    // Show results when medicines are found
+    const availableCount = medicines.filter(m => m.hasStockInDistrict).length;
+    return (
+        <div className="results-section">
+            <div className="results-header">
+                <div className="results-info">
+                    <span className="results-badge">📊 Search Results</span>
+                    <h3>Found {medicines.length} Medicines</h3>
+                    <p>Matching "{searchTags.join(', ')}" in {selectedDistrict}</p>
+                </div>
+                <div className="results-stats">
+                    <div className="stat-available">
+                        <span className="stat-dot available"></span>
+                        {availableCount} Available
+                    </div>
+                    <div className="stat-unavailable">
+                        <span className="stat-dot unavailable"></span>
+                        {medicines.length - availableCount} Out of Stock
+                    </div>
+                </div>
+            </div>
+
+            <div className="medicines-grid">
+                {medicines.map((medicine) => (
+                    <ExpandableMedicineCard
+                        key={`${medicine._id}_${medicine.weight}_${medicine.unit}`}
+                        medicine={medicine}
+                        onAddToWatchlist={handleOpenModal}
+                        user={user && !isAdmin && !isDonor ? user : null}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+};
 
     // Watchlist Section
     const WatchlistSection = () => (
