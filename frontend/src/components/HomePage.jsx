@@ -19,11 +19,10 @@ const HomePage = () => {
     const [searchTags, setSearchTags] = useState([]);
     const [selectedDistrict, setSelectedDistrict] = useState('');
     const [districts, setDistricts] = useState([]);
-    const [inputTag, setInputTag] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [selectedMedicine, setSelectedMedicine] = useState(null);
     const [showDonorPrompt, setShowDonorPrompt] = useState(false);
-    const [isFocused, setIsFocused] = useState(false);
+    const [searchPerformed, setSearchPerformed] = useState(false); // Add this state
 
     const isAdmin = user?.role === 'admin';
     const isDonor = user?.role === 'donor';
@@ -59,59 +58,46 @@ const HomePage = () => {
         }
     };
 
-    const handleAddTag = (e) => {
-        if (e.key === 'Enter' && inputTag.trim()) {
-            e.preventDefault();
-            if (!searchTags.includes(inputTag.trim().toLowerCase())) {
-                setSearchTags([...searchTags, inputTag.trim().toLowerCase()]);
-            }
-            setInputTag('');
-        }
-    };
-
-    const removeTag = (tagToRemove) => {
-        setSearchTags(searchTags.filter(tag => tag !== tagToRemove));
-    };
-
     const handleSearch = async () => {
-    if (searchTags.length === 0) {
-        toast.error('Please add at least one search tag');
-        return;
-    }
-    
-    if (!selectedDistrict) {
-        toast.error('Please select a district');
-        return;
-    }
-
-    setLoading(true);
-    setSearchPerformed(true); // Add this line - mark that search has been performed
-    
-    try {
-        const response = await api.post('/medicines/search', { 
-            tags: searchTags, 
-            district: selectedDistrict 
-        });
-        setMedicines(response.data);
-        
-        const totalMedicines = response.data.length;
-        const medicinesWithStock = response.data.filter(m => m.hasStockInDistrict).length;
-        const medicinesWithoutStock = totalMedicines - medicinesWithStock;
-        
-        if (totalMedicines === 0) {
-            toast.error(`No medicines found matching "${searchTags.join(', ')}"`);
-        } else {
-            toast.success(
-                `Found ${totalMedicines} medicine(s) - ${medicinesWithStock} available, ${medicinesWithoutStock} currently out of stock`
-            );
+        if (searchTags.length === 0) {
+            toast.error('Please add at least one search tag');
+            return;
         }
-    } catch (error) {
-        toast.error('Failed to search medicines');
-        console.error('Search error:', error);
-    } finally {
-        setLoading(false);
-    }
-};
+        
+        if (!selectedDistrict) {
+            toast.error('Please select a district');
+            return;
+        }
+
+        setLoading(true);
+        setSearchPerformed(true);
+        
+        try {
+            const response = await api.post('/medicines/search', { 
+                tags: searchTags, 
+                district: selectedDistrict 
+            });
+            setMedicines(response.data);
+            
+            const totalMedicines = response.data.length;
+            const medicinesWithStock = response.data.filter(m => m.hasStockInDistrict).length;
+            const medicinesWithoutStock = totalMedicines - medicinesWithStock;
+            
+            if (totalMedicines === 0) {
+                toast.error(`No medicines found matching "${searchTags.join(', ')}"`);
+            } else {
+                toast.success(
+                    `Found ${totalMedicines} medicine(s) - ${medicinesWithStock} available, ${medicinesWithoutStock} currently out of stock`
+                );
+            }
+        } catch (error) {
+            toast.error('Failed to search medicines');
+            console.error('Search error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const fetchWatchlist = async () => {
         try {
             const response = await api.get('/medicines/watchlist');
@@ -200,168 +186,175 @@ const HomePage = () => {
         </div>
     );
 
-   // Search Section Component (updated)
-const SearchSection = () => {
-    const [localTagInput, setLocalTagInput] = useState('');
-    const [localIsFocused, setLocalIsFocused] = useState(false);
+    // Search Section Component
+    const SearchSection = () => {
+        const [localTagInput, setLocalTagInput] = useState('');
+        const [localIsFocused, setLocalIsFocused] = useState(false);
 
-    const handleLocalAddTag = (e) => {
-        if (e.key === 'Enter' && localTagInput.trim()) {
-            e.preventDefault();
-            if (!searchTags.includes(localTagInput.trim().toLowerCase())) {
-                setSearchTags([...searchTags, localTagInput.trim().toLowerCase()]);
+        const handleLocalAddTag = (e) => {
+            if (e.key === 'Enter' && localTagInput.trim()) {
+                e.preventDefault();
+                if (!searchTags.includes(localTagInput.trim().toLowerCase())) {
+                    setSearchTags([...searchTags, localTagInput.trim().toLowerCase()]);
+                }
+                setLocalTagInput('');
             }
-            setLocalTagInput('');
-        }
-    };
+        };
 
-    const handleLocalRemoveTag = (tagToRemove) => {
-        setSearchTags(searchTags.filter(tag => tag !== tagToRemove));
-    };
+        const handleLocalRemoveTag = (tagToRemove) => {
+            setSearchTags(searchTags.filter(tag => tag !== tagToRemove));
+            // Reset search performed when removing tags
+            setSearchPerformed(false);
+            setMedicines([]);
+        };
 
-    return (
-        <div className="search-section">
-            <div className="search-header">
-                <h2>Search Medicines</h2>
-                <p>Find available medicines in your district</p>
-            </div>
+        return (
+            <div className="search-section">
+                <div className="search-header">
+                    <h2>Search Medicines</h2>
+                    <p>Find available medicines in your district</p>
+                </div>
 
-            <div className="search-tags-container">
-                <div className="tags-input-wrapper">
-                    <div className="tags-list">
-                        {searchTags.map((tag, index) => (
-                            <span key={index} className="tag-item">
-                                {tag}
-                                <button 
-                                    onClick={() => handleLocalRemoveTag(tag)} 
-                                    className="tag-remove"
-                                    type="button"
-                                >
-                                    ×
-                                </button>
-                            </span>
-                        ))}
-                        <input
-                            type="text"
-                            value={localTagInput}
-                            onChange={(e) => setLocalTagInput(e.target.value)}
-                            onKeyDown={handleLocalAddTag}
-                            onFocus={() => setLocalIsFocused(true)}
-                            onBlur={() => setLocalIsFocused(false)}
-                            placeholder={searchTags.length === 0 ? "Type medicine name and press Enter..." : ""}
-                            className="tags-input"
-                        />
-                    </div>
-                    {localIsFocused && (
-                        <div className="tags-suggestions">
-                            <p>💡 Try: paracetamol, amoxicillin, vitamin, insulin</p>
+                <div className="search-tags-container">
+                    <div className="tags-input-wrapper">
+                        <div className="tags-list">
+                            {searchTags.map((tag, index) => (
+                                <span key={index} className="tag-item">
+                                    {tag}
+                                    <button 
+                                        onClick={() => handleLocalRemoveTag(tag)} 
+                                        className="tag-remove"
+                                        type="button"
+                                    >
+                                        ×
+                                    </button>
+                                </span>
+                            ))}
+                            <input
+                                type="text"
+                                value={localTagInput}
+                                onChange={(e) => setLocalTagInput(e.target.value)}
+                                onKeyDown={handleLocalAddTag}
+                                onFocus={() => setLocalIsFocused(true)}
+                                onBlur={() => setLocalIsFocused(false)}
+                                placeholder={searchTags.length === 0 ? "Type medicine name and press Enter..." : ""}
+                                className="tags-input"
+                            />
                         </div>
-                    )}
+                        {localIsFocused && (
+                            <div className="tags-suggestions">
+                                <p>💡 Try: paracetamol, amoxicillin, vitamin, insulin</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
 
-            <div className="search-controls">
-                <div className="district-selector">
-                    <label>Select District</label>
-                    <select
-                        value={selectedDistrict}
-                        onChange={(e) => setSelectedDistrict(e.target.value)}
-                        className="district-select"
+                <div className="search-controls">
+                    <div className="district-selector">
+                        <label>Select District</label>
+                        <select
+                            value={selectedDistrict}
+                            onChange={(e) => {
+                                setSelectedDistrict(e.target.value);
+                                setSearchPerformed(false);
+                                setMedicines([]);
+                            }}
+                            className="district-select"
+                        >
+                            <option value="">Choose your district</option>
+                            {districts.map(district => (
+                                <option key={district} value={district}>{district}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <button
+                        onClick={handleSearch}
+                        disabled={searchTags.length === 0 || !selectedDistrict}
+                        className="search-button"
                     >
-                        <option value="">Choose your district</option>
-                        {districts.map(district => (
-                            <option key={district} value={district}>{district}</option>
-                        ))}
-                    </select>
+                        {loading ? (
+                            <span className="search-loading">
+                                <span className="spinner-small"></span>
+                                Searching...
+                            </span>
+                        ) : (
+                            <span>🔍 Search Medicines</span>
+                        )}
+                    </button>
                 </div>
-
-                <button
-                    onClick={handleSearch}
-                    disabled={searchTags.length === 0 || !selectedDistrict}
-                    className="search-button"
-                >
-                    {loading ? (
-                        <span className="search-loading">
-                            <span className="spinner-small"></span>
-                            Searching...
-                        </span>
-                    ) : (
-                        <span>🔍 Search Medicines</span>
-                    )}
-                </button>
             </div>
-        </div>
-    );
-};
+        );
+    };
 
     // Results Section
-const ResultsSection = () => {
-    // Don't show anything if search hasn't been performed yet
-    if (!searchPerformed) {
-        return null;
-    }
+    const ResultsSection = () => {
+        // Don't show anything if search hasn't been performed yet
+        if (!searchPerformed) {
+            return null;
+        }
 
-    if (loading) {
+        if (loading) {
+            return (
+                <div className="results-loading">
+                    <div className="loading-spinner"></div>
+                    <p>Searching for medicines...</p>
+                </div>
+            );
+        }
+
+        if (medicines.length === 0) {
+            return (
+                <div className="results-empty">
+                    <div className="empty-icon">🔍</div>
+                    <h3>No medicines found</h3>
+                    <p>We couldn't find any medicines matching "{searchTags.join(', ')}" in {selectedDistrict}</p>
+                    <button onClick={() => {
+                        setSearchTags([]);
+                        setSearchPerformed(false);
+                        setMedicines([]);
+                    }} className="empty-button">
+                        Clear Search
+                    </button>
+                </div>
+            );
+        }
+
+        // Show results when medicines are found
+        const availableCount = medicines.filter(m => m.hasStockInDistrict).length;
         return (
-            <div className="results-loading">
-                <div className="loading-spinner"></div>
-                <p>Searching for medicines...</p>
+            <div className="results-section">
+                <div className="results-header">
+                    <div className="results-info">
+                        <span className="results-badge">📊 Search Results</span>
+                        <h3>Found {medicines.length} Medicines</h3>
+                        <p>Matching "{searchTags.join(', ')}" in {selectedDistrict}</p>
+                    </div>
+                    <div className="results-stats">
+                        <div className="stat-available">
+                            <span className="stat-dot available"></span>
+                            {availableCount} Available
+                        </div>
+                        <div className="stat-unavailable">
+                            <span className="stat-dot unavailable"></span>
+                            {medicines.length - availableCount} Out of Stock
+                        </div>
+                    </div>
+                </div>
+
+                <div className="medicines-grid">
+                    {medicines.map((medicine) => (
+                        <ExpandableMedicineCard
+                            key={`${medicine._id}_${medicine.weight}_${medicine.unit}`}
+                            medicine={medicine}
+                            onAddToWatchlist={handleOpenModal}
+                            user={user && !isAdmin && !isDonor ? user : null}
+                        />
+                    ))}
+                </div>
             </div>
         );
-    }
-
-    if (medicines.length === 0) {
-        return (
-            <div className="results-empty">
-                <div className="empty-icon">🔍</div>
-                <h3>No medicines found</h3>
-                <p>We couldn't find any medicines matching "{searchTags.join(', ')}" in {selectedDistrict}</p>
-                <button onClick={() => {
-                    setSearchTags([]);
-                    setTagInputValue('');
-                    setSearchPerformed(false); // Reset search performed
-                }} className="empty-button">
-                    Clear Search
-                </button>
-            </div>
-        );
-    }
-
-    // Show results when medicines are found
-    const availableCount = medicines.filter(m => m.hasStockInDistrict).length;
-    return (
-        <div className="results-section">
-            <div className="results-header">
-                <div className="results-info">
-                    <span className="results-badge">📊 Search Results</span>
-                    <h3>Found {medicines.length} Medicines</h3>
-                    <p>Matching "{searchTags.join(', ')}" in {selectedDistrict}</p>
-                </div>
-                <div className="results-stats">
-                    <div className="stat-available">
-                        <span className="stat-dot available"></span>
-                        {availableCount} Available
-                    </div>
-                    <div className="stat-unavailable">
-                        <span className="stat-dot unavailable"></span>
-                        {medicines.length - availableCount} Out of Stock
-                    </div>
-                </div>
-            </div>
-
-            <div className="medicines-grid">
-                {medicines.map((medicine) => (
-                    <ExpandableMedicineCard
-                        key={`${medicine._id}_${medicine.weight}_${medicine.unit}`}
-                        medicine={medicine}
-                        onAddToWatchlist={handleOpenModal}
-                        user={user && !isAdmin && !isDonor ? user : null}
-                    />
-                ))}
-            </div>
-        </div>
-    );
-};
+    };
 
     // Watchlist Section
     const WatchlistSection = () => (
@@ -430,7 +423,11 @@ const ResultsSection = () => {
                 {user && !isAdmin && !isDonor && (
                     <div className="tabs-modern">
                         <button
-                            onClick={() => setActiveTab('search')}
+                            onClick={() => {
+                                setActiveTab('search');
+                                setSearchPerformed(false);
+                                setMedicines([]);
+                            }}
                             className={`tab-btn ${activeTab === 'search' ? 'active' : ''}`}
                         >
                             <span className="tab-icon">🔍</span>
@@ -450,7 +447,11 @@ const ResultsSection = () => {
                 {user && isDonor && (
                     <div className="tabs-modern">
                         <button
-                            onClick={() => setActiveTab('search')}
+                            onClick={() => {
+                                setActiveTab('search');
+                                setSearchPerformed(false);
+                                setMedicines([]);
+                            }}
                             className={`tab-btn ${activeTab === 'search' ? 'active' : ''}`}
                         >
                             <span className="tab-icon">🔍</span>
