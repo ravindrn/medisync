@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+// Detect environment and use the right backend URL
+const API_URL = import.meta.env.VITE_API_URL || 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:5000/api'
+        : 'https://YOUR-RENDER-BACKEND.onrender.com/api');  // ← replace this
 
 const api = axios.create({
     baseURL: API_URL,
@@ -36,17 +40,14 @@ api.interceptors.response.use(
     },
     (error) => {
         if (error.code === 'ERR_NETWORK') {
-            console.error('❌ Network Error: Cannot connect to backend server');
-            console.error('   Make sure backend is running on http://localhost:5000');
+            console.error(`❌ Network Error: Cannot connect to backend server at ${API_URL}`);
         } else if (error.response) {
             console.error(`❌ API Error: ${error.response.status} - ${error.response.data?.message || error.message}`);
             
-            // If unauthorized, clear local storage and redirect to login
             if (error.response.status === 401) {
                 console.log('🔒 Unauthorized - Clearing session and redirecting to login');
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
-                // Only redirect if not already on login page
                 if (!window.location.pathname.includes('/login')) {
                     window.location.href = '/login';
                 }
